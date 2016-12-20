@@ -3,6 +3,7 @@
 import React, { Component, PropTypes } from 'react';
 import { Dialog } from '@jenkins-cd/design-language';
 import pipelineStore from '../../services/PipelineStore';
+import { convertInternalModelToJson, convertJsonToPipeline } from '../../services/PipelineSyntaxConverter';
 
 type Props = {
     title?: string,
@@ -32,8 +33,20 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
     state:State = {};
 
     updateStateFromPipelineScript(script: string) {
-        pipelineStore.updateStateFromPipelineScript(this.refs.pipelineScript.value);
-        this.setState({showPipelineScript: false});
+        pipelineStore.updateStateFromPipelineScript(this.refs.pipelineScript.value,
+            s => this.setState({showPipelineScript: false}),
+            err => console.log(err));
+    }
+
+    showPipelineScriptDialog() {
+        if (pipelineStore.pipeline) {
+            const json = convertInternalModelToJson(pipelineStore.pipeline);
+            convertJsonToPipeline(JSON.stringify(json), result => {
+                this.setState({showPipelineScript: true, pipelineScript: result});
+            });
+        } else {
+            this.setState({showPipelineScript: true});
+        }
     }
 
     render() {
@@ -47,7 +60,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                     <div className="editor-page-header-controls">
                         <button className="btn-secondary inverse">Discard Changes</button>
                         <button className="btn inverse">Save</button>
-                        <button onClick={() => this.setState({showPipelineScript: true})}>Show Pipeline Script</button>
+                        <button onClick={() => this.showPipelineScriptDialog()}>Show Pipeline Script</button>
                     </div>
                 </div>
                 {this.props.children}

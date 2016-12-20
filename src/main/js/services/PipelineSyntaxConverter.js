@@ -27,15 +27,15 @@ export type PipelineNamedValueDescriptor = {
 
 export type PipelineStep = {
     name: string,
-    children: PipelineStep[],
+    children?: PipelineStep[],
     arguments: PipelineValueDescriptor | PipelineNamedValueDescriptor[],
 };
 
 export type PipelineStage = {
     name: string,
-    branches: PipelineStage[],
-    agent: PipelineValueDescriptor,
-    steps: PipelineStep[],
+    branches?: PipelineStage[],
+    agent?: PipelineValueDescriptor,
+    steps?: PipelineStep[],
 };
 
 function singleValue(v: any) {
@@ -104,7 +104,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
 
             for (let stepIndex = 0; stepIndex < b.steps.length; stepIndex++) {
                 const s = b.steps[stepIndex];
-                const step = readStep(s, idgen);
+                const step = readStepFromJson(s, idgen);
                 stage.steps.push(step);
             }
         }
@@ -113,7 +113,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
     return out;
 }
 
-function readStep(s: PipelineStep, idgen: any) {
+function readStepFromJson(s: PipelineStep, idgen: any) {
     // this will already have been called and cached:
     let stepMeta = [];
     pipelineStepListStore.getStepListing(steps => {
@@ -151,14 +151,96 @@ function readStep(s: PipelineStep, idgen: any) {
     }
     if (s.children && s.children.length > 0) {
         for (const c of s.children) {
-            const child = readStep(c, idgen);
+            const child = readStepFromJson(c, idgen);
             step.children.push(child);
         }
     }
     return step;
 }
 
-export function convertInternalModelToJson(model: StageInfo): PipelineJsonContainer {
+function _lit(value: any): PipelineValueDescriptor {
+    if (value instanceof Object) {
+        if ('isLiteral' in value) {
+            return value;
+        }
+        if ('value' in value) {
+            return _lit(value.value);
+        }
+    }
+    return {
+        isLiteral: true,
+        value: value,
+    };
+}
+
+function _convertStepArguments(step: StepInfo): PipelineNamedValueDescriptor[] {
+    const out: PipelineNamedValueDescriptor[] = [];
+    for (const arg of Object.keys(step.data)) {
+        out.push({
+            key: arg,
+            value: _lit(step.data[arg]),
+        });
+    }
+    return out;
+}
+
+function _convertStepsToJson(steps: StepInfo[]): PipelineStep[] {
+    const out: PipelineStep[] = [];
+    for (const step of steps) {
+        const s: PipelineStep = {
+            name: step.functionName,
+            arguments: _convertStepArguments(step),
+        };
+        if (step.children && step.children.length > 0) {
+            s.children = _convertStepsToJson(step.children);
+        }
+        out.push(s);
+    }
+    return out;
+}
+
+function _convertStageToJson(stage: StageInfo): PipelineStage {
+    const out: PipelineStage = {
+        name: stage.name,
+    };
+
+    if (stage.children && stage.children.length > 0) {
+        // parallel
+        out.branches = [];
+
+        // TODO Currently, sub-stages are not supported, this should be recursive
+        for (const child of stage.children) {
+            out.branches.push({
+                name: child.name,
+                steps: _convertStepsToJson(child.steps),
+            });
+        }
+    } else {
+        // single, add a 'default' branch
+        out.branches = [
+            {
+                name: 'default',
+                steps: _convertStepsToJson(stage.steps),
+            }
+        ];
+    }
+
+    return out;
+}
+
+export function convertInternalModelToJson(pipeline: PipelineInfo): PipelineJsonContainer {
+    const out: PipelineJsonContainer = {
+        pipeline: {
+            agent: _lit(pipeline.agent), // FIXME
+            stages: [],
+        },
+    };
+    const outPipeline = out.pipeline;
+    for (const stage of pipeline.children) {
+        const s = _convertStageToJson(stage);
+        outPipeline.stages.push(s);
+    }
+    return out;
 }
 
 function fetch(url, body, handler) {
@@ -208,6 +290,11 @@ export function convertPipelineToJson(pipeline: string, handler) {
 export function convertJsonToPipeline(json: string, handler) {
     pipelineStepListStore.getStepListing(steps => {
         fetch(`${UrlConfig.getJenkinsRootURL()}/pipeline-model-converter/toJenkinsfile`,
-            'json=' + encodeURIComponent(json), data => handler(data.jenkinsfile));
+            'json=' + encodeURIComponent(json), data => {
+                if (data.errors) {
+                    console.log(data);
+                }
+                handler(data.jenkinsfile);
+            });
     });
 }

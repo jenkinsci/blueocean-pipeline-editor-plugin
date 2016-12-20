@@ -279,10 +279,11 @@ class PipelineStore {
         convertPipelineToJson(pipeline, p => {
             const internal = convertJsonToInternalModel(p);
             this.setPipeline(internal);
+            onComplete(internal);
         });
     }
 
-    setPipeline(pipeline) {
+    setPipeline(pipeline: PipelineInfo) {
         this.pipeline = pipeline;
         this.notify();
     }

@@ -1,4 +1,4 @@
-import { convertJsonToInternalModel }  from '../../../main/js/services/PipelineSyntaxConverter';
+import { convertJsonToInternalModel, convertInternalModelToJson }  from '../../../main/js/services/PipelineSyntaxConverter';
 import pipelineStepListStore  from '../../../main/js/services/PipelineStepListStore';
 import { assert } from 'chai';
 
@@ -185,5 +185,30 @@ describe('Pipeline Syntax Converter', () => {
         assert(containerStep.functionName == 'timeout', "Incorrect step function");
         // 'script' is the required parameter
         assert(containerStep.children.length == 1, "No children for nested step");
+    });
+
+    it('converts to JSON: basic', () => {
+        const internal: Pipeline = {
+            children: [
+                {
+                    name: "stage 1",
+                    steps: [
+                        {
+                            functionName: 'sh',
+                            data: {
+                                script: 'echo hello',
+                            }
+                        }
+                    ]
+                },
+            ]
+        };
+        const out = convertInternalModelToJson(internal);
+        assert(out.pipeline.
+            stages[0].
+            children[0].
+            steps[0].
+            arguments[0].
+            key == 'script', "Incorrect conversion to JSON");
     });
 });
