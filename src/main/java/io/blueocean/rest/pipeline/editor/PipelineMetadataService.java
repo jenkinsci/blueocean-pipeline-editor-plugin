@@ -21,6 +21,7 @@ import org.jenkinsci.plugins.structs.describable.DescribableModel;
 import org.jenkinsci.plugins.workflow.steps.Step;
 import org.jenkinsci.plugins.workflow.steps.StepDescriptor;
 import org.kohsuke.stapler.NoStaplerConstructorException;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.verb.GET;
 import org.springframework.core.LocalVariableTableParameterNameDiscoverer;
 import org.springframework.core.ParameterNameDiscoverer;
@@ -48,6 +49,11 @@ public class PipelineMetadataService implements ApiRoutable {
     @Override
     public String getUrlName() {
         return "pipeline-metadata";
+    }
+
+    @GET
+    public String doCrumbInfo() {
+        return Jenkins.getInstance().getCrumbIssuer().getCrumbRequestField()  + "=" + Jenkins.getInstance().getCrumbIssuer().getCrumb();
     }
 
     /**

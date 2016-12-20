@@ -1,14 +1,19 @@
 // @flow
 
 import React, { Component, PropTypes } from 'react';
+import { Dialog } from '@jenkins-cd/design-language';
+import pipelineStore from '../../services/PipelineStore';
 
 type Props = {
     title?: string,
     children: any,
-    style?: ?Object
+    style?: ?Object,
 };
 
-type State = {};
+type State = {
+    showPipelineScript: ?boolean,
+    pipelineScript: ?string,
+};
 
 type DefaultProps = typeof EditorPage.defaultProps;
 
@@ -21,7 +26,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
     //static propTypes = {};
     // TODO: React proptypes ^^^
 
-    state:State;
+    state:State = {};
 
     render() {
 
@@ -34,9 +39,19 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                     <div className="editor-page-header-controls">
                         <button className="btn-secondary inverse">Discard Changes</button>
                         <button className="btn inverse">Save</button>
+                        <button onClick={() => this.setState({showPipelineScript: true})}>Show Pipeline Script</button>
                     </div>
                 </div>
                 {this.props.children}
+                {this.state.showPipelineScript &&
+                    <Dialog className="editor-pipeline-dialog" onDismiss={() => this.setState({showPipelineScript: false})}
+                        title="Pipeline Script"
+                        buttons={<div><button onClick={e => { pipelineStore.updateStateFromPipelineScript(this.refs.pipelineScript.value); this.setState({showPipelineScript: false}); }}>Update</button></div>}>
+                        <div className="editor-text-area">
+                            <textarea ref="pipelineScript" style={{width: "100%", minHeight: "30em", height: "100%"}} defaultValue={this.state.pipelineScript}/>
+                        </div>
+                    </Dialog>
+                }
             </div>
         );
     }
