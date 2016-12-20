@@ -69,9 +69,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                 <div className="editor-page-header">
                     <h3>{ title }</h3>
                     <div className="editor-page-header-controls">
-                        <button className="btn-secondary inverse">Discard Changes</button>
-                        <button className="btn inverse">Save</button>
-                        <button onClick={() => this.showPipelineScriptDialog()}>Show Pipeline Script</button>
+                        <button className="btn inverse" onClick={() => this.showPipelineScriptDialog()}>Load/Save</button>
                     </div>
                 </div>
                 {this.props.children}

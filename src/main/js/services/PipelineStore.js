@@ -87,20 +87,49 @@ const findStepById = function (steps, id) {
     }
 };
 
+/**
+ * Returns the stage that contains the provided step or undefined
+ * if none found
+ */
+const findStageByStep = function (stage, step) {
+    // Does this stage contain this step directly?
+    if (stage.steps && stage.steps.length > 0) {
+        for (const s of stage.steps) {
+            if (s == step) {
+                return stage;
+            }
+        }
+        // or is this a nested step?
+        const parentStep = findParentStepByChild(stage.steps, step);
+        if (parentStep) {
+            return stage;
+        }
+    }
 
-const findParentStepByChildId = function (steps, id) {
+    // try child stages
+    if (stage.children && stage.children.length > 0) {
+        for (const child of stage.children) {
+            const childStage = findStageByStep(child, step);
+            if (childStage) {
+                return childStage;
+            }
+        }
+    }
+};
+
+const findParentStepByChild = function (steps, childStep) {
     for (let s of steps) {
         if (s.isContainer) {
             const children = s.children;
             if (children) {
                 for (let c of children) {
-                    if (c.id === id) {
+                    if (c.id === childStep.id) {
                         return s;
                     }
                 }
-                const childStep = findParentStepByChildId(children, id);
-                if (childStep) {
-                    return childStep;
+                const nestedStep = findParentStepByChild(children, childStep);
+                if (nestedStep) {
+                    return nestedStep;
                 }
             }
         }
@@ -147,6 +176,20 @@ class PipelineStore {
 
     findParentStage(selectedStage: StageInfo) {
         return findParentStage(this.pipeline, selectedStage);
+    }
+
+    findStageByStep(step: StepInfo): ?StageInfo {
+        const stage = findStageByStep(this.pipeline, step);
+        return stage;
+    }
+    
+    findParentStep(childStep: StepInfo): ?StepInfo {
+        const stage = findStageByStep(this.pipeline, childStep);
+        if (!stage) {
+            throw new Error('Stage not found');
+        }
+        const parent = findParentStepByChild(stage.steps, childStep);
+        return parent;
     }
     
     /**
@@ -196,9 +239,9 @@ class PipelineStore {
         this.notify();
     }
 
-    addStep(selectedStage: StageInfo, parentStep: StepInfo, step: any) {
+    addStep(selectedStage: StageInfo, parentStep: StepInfo, step: any): StepInfo {
         if (!selectedStage) {
-            return;
+            throw new Error('Must provide a stage to add steps');
         }
 
         const oldStepsForStage = selectedStage.steps || [];
@@ -229,18 +272,16 @@ class PipelineStore {
 
         selectedStage.steps = newStepsForStage;
         this.notify();
+        return newStep;
     }
 
-    deleteStep(selectedStage: StageInfo, step:StepInfo) {
-        if (!selectedStage) {
-            return;
-        }
-
+    deleteStep(step:StepInfo) {
+        const selectedStage = findStageByStep(this.pipeline, step);
         const oldStepsForStage = selectedStage.steps || [];
         let newStepsForStage = oldStepsForStage;
         let newSelectedStep;
 
-        const parent = findParentStepByChildId(oldStepsForStage, step.id);
+        const parent = findParentStepByChild(selectedStage.steps, step);
         if (parent) {
             const stepIdx = parent.children.indexOf(step);
 

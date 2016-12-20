@@ -134,6 +134,23 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         });
     }
 
+    addStep(step: any) {
+        const newStep = pipelineStore.addStep(this.state.selectedStage, this.state.parentStep, step);
+        this.setState({showSelectStep: false, selectedStep: newStep});
+    }
+
+    deleteStep(step: any) {
+        let stage = pipelineStore.findStageByStep(step); // this sould be current
+        let selectedStep = pipelineStore.findParentStep(step);
+        pipelineStore.deleteStep(step);
+        if (!selectedStep) {
+            if (stage) {
+                selectedStep = stage.steps[0];
+            }
+        }
+        this.setState({selectedStep: selectedStep});
+    }
+
     deleteStageClicked(e:HTMLEvent) {
         e.target.blur(); // Don't leave ugly selection highlight
 
@@ -162,14 +179,14 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                                                          onAddStepClick={() => this.openSelectStepDialog()}
                                                          onAddChildStepClick={parent => this.openSelectStepDialog(parent)}
                                                          onStepSelected={(step) => this.selectedStepChanged(step)}
-                                                         onDeleteStepClick={(step) => pipelineStore.deleteStep(step)}/>
+                                                         onDeleteStepClick={step => this.deleteStep(step)}/>
                             : <p>Select or create a build stage</p>}
                     </div>
                     {selectedStep &&
                     <div className="editor-main-step-details">
                         {selectedStage ? <EditorStepDetails step={selectedStep} key={steps.indexOf(selectedStep)}
                                                             onDataChange={newValue => this.stepDataChanged(newValue)}
-                                                            onDeleteStepClick={(step) => pipelineStore.deleteStep(step)}/>
+                                                            onDeleteStepClick={step => this.deleteStep(step)}/>
                             : <p>Select or create a build stage</p>}
                     </div>
                     }
@@ -232,7 +249,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                 {detailsOrPlaceholder}
                 {this.state.showSelectStep && <AddStepSelectionDialog
                     onClose={() => this.setState({showSelectStep: false})}
-                    onStepSelected={(step) => { this.setState({showSelectStep: false}); pipelineStore.addStep(selectedStage, this.state.parentStep, step); }} />}
+                    onStepSelected={step => this.addStep(step)} />}
             </div>
         );
     }
