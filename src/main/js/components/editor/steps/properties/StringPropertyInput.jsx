@@ -6,7 +6,8 @@ export default class StringPropertyInput extends React.Component {
         return (
             <div>
                 <label className="form-label">{this.props.type.capitalizedName}</label>
-                <TextInput defaultValue={this.props.step.data[this.props.propName]} onChange={e => { this.props.step.data[this.props.propName] = e.target.value; this.props.onChange(this.props.step); }}/>
+                <TextInput defaultValue={this.props.step.data[this.props.propName]}
+                    onChange={val => { this.props.step.data[this.props.propName] = val; this.props.onChange(this.props.step); }}/>
             </div>
         );
     }

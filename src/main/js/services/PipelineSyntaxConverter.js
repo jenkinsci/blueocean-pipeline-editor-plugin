@@ -21,25 +21,21 @@ export type PipelineValueDescriptor = {
 };
 
 export type PipelineNamedValueDescriptor = {
-    name: PipelineValueDescriptor,
-    value: string,
+    key: string,
+    value: PipelineValueDescriptor,
 };
 
 export type PipelineStep = {
     name: string,
     children: PipelineStep[],
+    arguments: PipelineValueDescriptor | PipelineNamedValueDescriptor[],
 };
 
 export type PipelineStage = {
     name: string,
-    branches: PipelineBranch[],
+    branches: PipelineStage[],
     agent: PipelineValueDescriptor,
     steps: PipelineStep[],
-};
-
-export type PipelineBranch = {
-    name: string,
-    arguments: PipelineValueDescriptor | PipelineValueDescriptor[],
 };
 
 function singleValue(v: any) {
@@ -51,7 +47,7 @@ function singleValue(v: any) {
     };
 }
 
-export function convertJsonToInternalModel(json: PipelineJsonContainer): StageInfo {
+export function convertJsonToInternalModel(json: PipelineJsonContainer): PipelineInfo {
     let idgen = { id: 0, next() { return --this.id; } };
     const pipeline = json.pipeline;
     const out: PipelineInfo = {

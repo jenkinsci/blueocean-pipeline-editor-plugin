@@ -275,7 +275,7 @@ class PipelineStore {
         this.notify();
     }
 
-    updateStateFromPipelineScript(pipeline: string) {
+    updateStateFromPipelineScript(pipeline: string, onComplete: Function, onError: Function) {
         convertPipelineToJson(pipeline, p => {
             const internal = convertJsonToInternalModel(p);
             this.setPipeline(internal);
