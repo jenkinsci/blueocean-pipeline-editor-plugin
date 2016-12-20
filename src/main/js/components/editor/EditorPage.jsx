@@ -60,6 +60,13 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
         }
     }
 
+    newPipeline() {
+        pipelineStore.setPipeline({
+            agent: { isLiteral: true, value: 'any' },
+            children: [],
+        });
+    }
+
     render() {
 
         let {title = "Create Pipeline", style} = this.props;
@@ -69,6 +76,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                 <div className="editor-page-header">
                     <h3>{ title }</h3>
                     <div className="editor-page-header-controls">
+                        <button className="btn-secondary inverse" onClick={() => this.newPipeline()}>New</button>
                         <button className="btn inverse" onClick={() => this.showPipelineScriptDialog()}>Load/Save</button>
                     </div>
                 </div>
