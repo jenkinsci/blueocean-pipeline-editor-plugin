@@ -1,7 +1,7 @@
 // @flow
 
 import { Fetch, UrlConfig } from '@jenkins-cd/blueocean-core-js';
-import type { PipelineInfo, StageInfo } from './PipelineStore';
+import type { PipelineInfo, StageInfo, StepInfo } from './PipelineStore';
 import pipelineStepListStore from './PipelineStepListStore';
 
 const value = 'value';
@@ -25,10 +25,16 @@ export type PipelineNamedValueDescriptor = {
     value: string,
 };
 
+export type PipelineStep = {
+    name: string,
+    children: PipelineStep[],
+};
+
 export type PipelineStage = {
     name: string,
     branches: PipelineBranch[],
     agent: PipelineValueDescriptor,
+    steps: PipelineStep[],
 };
 
 export type PipelineBranch = {
@@ -46,16 +52,10 @@ function singleValue(v: any) {
 }
 
 export function convertJsonToInternalModel(json: PipelineJsonContainer): StageInfo {
-    // this will already have been called and cached:
-    let stepMeta = [];
-    pipelineStepListStore.getStepListing(steps => {
-        stepMeta = steps;
-    });
-
-    let id = 0;
+    let idgen = { id: 0, next() { return --this.id; } };
     const pipeline = json.pipeline;
     const out: PipelineInfo = {
-        id: --id,
+        id: idgen.next(),
         children: [],
         steps: [],
     };
@@ -79,7 +79,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): StageIn
         const topStage = pipeline.stages[i];
 
         const topStageInfo: StageInfo = {
-            id: --id,
+            id: idgen.next(),
             name: topStage.name,
             children: [],
             steps: [],
@@ -98,7 +98,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): StageIn
             } else {
                 // Otherwise this is part of a parallel set
                 stage = {
-                    id: --id,
+                    id: idgen.next(),
                     name: b.name,
                     children: [],
                     steps: [],
@@ -108,42 +108,58 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): StageIn
 
             for (let stepIndex = 0; stepIndex < b.steps.length; stepIndex++) {
                 const s = b.steps[stepIndex];
-                const meta = stepMeta.filter(md => md.functionName === s.name)[0];
-                const step = {
-                    name: s.name,
-                    label: meta.displayName,
-                    functionName: meta.functionName,
-                    data: {},
-                    isContainer: meta.isContainer,
-                    children: [],
-                    id: --id,
-                };
+                const step = readStep(s, idgen);
                 stage.steps.push(step);
-                if (s.arguments) {
-                    const args = s.arguments instanceof Array ? s.arguments : [ s.arguments ];
-                    for (let k = 0; k < args.length; k++) {
-                        const arg = args[k];
-                        if (arg.key) {
-                            step.data[arg.key] = arg.value.value;
-                        } else {
-                            if (!meta.parameters) {
-                                throw new Error('No parameters for: ' + s.name);
-                            }
-                            // this must be a requiredSingleParameter,
-                            // need to find it to set the right parameter value
-                            const param = meta.parameters.filter(a => a.isRequired)[0];
-                            if (!param) {
-                                throw new Error('Unable to find required parameter for: ' + s.name);
-                            }
-                            step.data[param.name] = arg.value;
-                        }
-                    }
-                }
             }
         }
     }
 
     return out;
+}
+
+function readStep(s: PipelineStep, idgen: any) {
+    // this will already have been called and cached:
+    let stepMeta = [];
+    pipelineStepListStore.getStepListing(steps => {
+        stepMeta = steps;
+    });
+    const meta = stepMeta.filter(md => md.functionName === s.name)[0];
+    const step = {
+        name: s.name,
+        label: meta.displayName,
+        functionName: meta.functionName,
+        data: {},
+        isContainer: meta.isBlockContainer,
+        children: [],
+        id: idgen.next(),
+    };
+    if (s.arguments) {
+        const args = s.arguments instanceof Array ? s.arguments : [ s.arguments ];
+        for (let k = 0; k < args.length; k++) {
+            const arg = args[k];
+            if (arg.key) {
+                step.data[arg.key] = arg.value.value;
+            } else {
+                if (!meta.parameters) {
+                    throw new Error('No parameters for: ' + s.name);
+                }
+                // this must be a requiredSingleParameter,
+                // need to find it to set the right parameter value
+                const param = meta.parameters.filter(a => a.isRequired)[0];
+                if (!param) {
+                    throw new Error('Unable to find required parameter for: ' + s.name);
+                }
+                step.data[param.name] = arg.value;
+            }
+        }
+    }
+    if (s.children && s.children.length > 0) {
+        for (const c of s.children) {
+            const child = readStep(c, idgen);
+            step.children.push(child);
+        }
+    }
+    return step;
 }
 
 export function convertInternalModelToJson(model: StageInfo): PipelineJsonContainer {

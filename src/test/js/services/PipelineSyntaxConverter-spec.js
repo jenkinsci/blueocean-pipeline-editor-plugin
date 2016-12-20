@@ -168,4 +168,22 @@ describe('Pipeline Syntax Converter', () => {
         // 'script' is the required parameter
         assert(batStep.data.script == 'someBatScript', "Single required argument not properly handled");
     });
+
+    it('converts from JSON: nested steps', () => {
+        const p = {"pipeline": {
+            "stages": [{"name": "multiple arguments",
+            "branches": [{
+                "name": "default","steps": [{
+                    "name": "timeout","arguments": [
+                        {"key": "time","value": {"isLiteral": true,"value": 5}},
+                        {"key": "unit","value": {"isLiteral": true,"value": "SECONDS"}}],
+                        "children": [{"name": "echo","arguments": 
+                        {"isLiteral": true,"value": "hello"}}]}]}]}],
+                        "agent": {"isLiteral": true,"value": "any"}}};
+        const internal = convertJsonToInternalModel(p);
+        const containerStep = internal.children[0].steps[0];
+        assert(containerStep.functionName == 'timeout', "Incorrect step function");
+        // 'script' is the required parameter
+        assert(containerStep.children.length == 1, "No children for nested step");
+    });
 });
