@@ -23,7 +23,7 @@ describe('Pipeline Syntax Converter', () => {
                 "stages": []
             }};
         const internal = convertJsonToInternalModel(p);
-        assert(internal.agent.value.value == 'any', "Wrong agent");
+        assert(internal.agent.value == 'any', "Wrong agent");
     });
 
     it('converts from JSON: agent docker', () => {
@@ -39,7 +39,7 @@ describe('Pipeline Syntax Converter', () => {
                 "stages": []
             }};
         const internal = convertJsonToInternalModel(p);
-        assert(internal.agent.key == 'docker', "Wrong agent");
+        assert(internal.agent[0].key == 'docker', "Wrong agent");
     });
     
     it('converts from JSON: single stage', () => {
@@ -136,7 +136,7 @@ describe('Pipeline Syntax Converter', () => {
         }};
         const internal = convertJsonToInternalModel(p);
         const batStep = internal.children[0].steps[0];
-        assert(batStep.functionName == 'bat', "Incorrect step function");
+        assert(batStep.name == 'bat', "Incorrect step function");
         // 'script' is the required parameter
         assert(batStep.data.script == 'someBatScript', "Named arguments not properly handled");
         assert(batStep.data.returnStdout == true, "Named arguments not properly handled");
@@ -164,7 +164,7 @@ describe('Pipeline Syntax Converter', () => {
         }};
         const internal = convertJsonToInternalModel(p);
         const batStep = internal.children[0].steps[0];
-        assert(batStep.functionName == 'bat', "Incorrect step function");
+        assert(batStep.name == 'bat', "Incorrect step function");
         // 'script' is the required parameter
         assert(batStep.data.script == 'someBatScript', "Single required argument not properly handled");
     });
@@ -182,7 +182,7 @@ describe('Pipeline Syntax Converter', () => {
                         "agent": {"isLiteral": true,"value": "any"}}};
         const internal = convertJsonToInternalModel(p);
         const containerStep = internal.children[0].steps[0];
-        assert(containerStep.functionName == 'timeout', "Incorrect step function");
+        assert(containerStep.name == 'timeout', "Incorrect step function");
         // 'script' is the required parameter
         assert(containerStep.children.length == 1, "No children for nested step");
     });
@@ -206,7 +206,7 @@ describe('Pipeline Syntax Converter', () => {
         const out = convertInternalModelToJson(internal);
         assert(out.pipeline.
             stages[0].
-            children[0].
+            branches[0].
             steps[0].
             arguments[0].
             key == 'script', "Incorrect conversion to JSON");

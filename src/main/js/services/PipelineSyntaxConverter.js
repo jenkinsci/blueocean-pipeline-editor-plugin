@@ -64,7 +64,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
             },
         };
     } else {
-        out.agent = singleValue(pipeline.agent);
+        out.agent = pipeline.agent;
     }
 
     if (!pipeline.stages) {
@@ -123,7 +123,6 @@ function readStepFromJson(s: PipelineStep, idgen: any) {
     const step = {
         name: s.name,
         label: meta.displayName,
-        functionName: meta.functionName,
         data: {},
         isContainer: meta.isBlockContainer,
         children: [],
@@ -188,7 +187,7 @@ function _convertStepsToJson(steps: StepInfo[]): PipelineStep[] {
     const out: PipelineStep[] = [];
     for (const step of steps) {
         const s: PipelineStep = {
-            name: step.functionName,
+            name: step.name,
             arguments: _convertStepArguments(step),
         };
         if (step.children && step.children.length > 0) {
@@ -231,7 +230,7 @@ function _convertStageToJson(stage: StageInfo): PipelineStage {
 export function convertInternalModelToJson(pipeline: PipelineInfo): PipelineJsonContainer {
     const out: PipelineJsonContainer = {
         pipeline: {
-            agent: _lit(pipeline.agent), // FIXME
+            agent: pipeline.agent,
             stages: [],
         },
     };
@@ -280,21 +279,26 @@ function fetch(url, body, handler) {
     });
 }
 
-export function convertPipelineToJson(pipeline: string, handler) {
+export function convertPipelineToJson(pipeline: string, handler: Function) {
     pipelineStepListStore.getStepListing(steps => {
         fetch(`${UrlConfig.getJenkinsRootURL()}/pipeline-model-converter/toJson`,
-            'jenkinsfile=' + encodeURIComponent(pipeline), data => handler(data.json));
+            'jenkinsfile=' + encodeURIComponent(pipeline), data => {
+                if (data.errors) {
+                    console.log(data);
+                }
+                handler(data.json, data.errors);
+            });
     });
 }
 
-export function convertJsonToPipeline(json: string, handler) {
+export function convertJsonToPipeline(json: string, handler: Function) {
     pipelineStepListStore.getStepListing(steps => {
         fetch(`${UrlConfig.getJenkinsRootURL()}/pipeline-model-converter/toJenkinsfile`,
             'json=' + encodeURIComponent(json), data => {
                 if (data.errors) {
                     console.log(data);
                 }
-                handler(data.jenkinsfile);
+                handler(data.jenkinsfile, data.errors);
             });
     });
 }

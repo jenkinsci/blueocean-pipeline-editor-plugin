@@ -69,10 +69,10 @@ export default class GenericStepEditorPanel extends Component<DefaultProps, Prop
                         return React.createElement(propTypeEditor, { step: step, type: p, propName: p.name, onChange: () => this.updateStepData() });
                     }
                     return (
-                        <div className="form-item" key={p.name}>
+                        <div className="form-item">
                             <label className="form-label">{p.capitalizedName}</label>
                             <div className="form-input">
-                                <TextInput defaultValue={step.data[p.name]} onChange={val => { step.data[p.name] = val; this.updateStepData(); }} />
+                                <TextInput key={p.name} defaultValue={step.data[p.name]} onChange={val => { step.data[p.name] = val; this.updateStepData(); }} />
                             </div>
                         </div>
                     );

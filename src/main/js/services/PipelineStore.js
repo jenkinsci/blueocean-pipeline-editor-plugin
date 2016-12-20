@@ -1,7 +1,5 @@
 // @flow
 
-import { convertPipelineToJson, convertJsonToInternalModel } from './PipelineSyntaxConverter';
-
 /**
  * A stage in a pipeline
  */
@@ -273,14 +271,6 @@ class PipelineStore {
             newSelectedStep = newStepsForStage[newSelectedStepIdx];
         }
         this.notify();
-    }
-
-    updateStateFromPipelineScript(pipeline: string, onComplete: Function, onError: Function) {
-        convertPipelineToJson(pipeline, p => {
-            const internal = convertJsonToInternalModel(p);
-            this.setPipeline(internal);
-            onComplete(internal);
-        });
     }
 
     setPipeline(pipeline: PipelineInfo) {
