@@ -66,7 +66,7 @@ export class EditorStepDetails extends Component {
     }
     
     getStepEditor(step) {
-        const editor = stepEditorsByName[step.type];
+        const editor = stepEditorsByName[step.name];
         if (editor) {
             return editor;
         }

@@ -3,6 +3,7 @@
 import React, { Component, PropTypes } from 'react';
 import { EditorPage } from './editor/EditorPage';
 import { EditorMain } from './editor/EditorMain';
+import Extensions from '@jenkins-cd/js-extensions';
 
 import type {StepInfo, StageInfo} from './editor/common';
 
@@ -18,7 +19,7 @@ var __id = 1;
 
 function makeStage(name, children = []):StageInfo {
     const id = __id++;
-    return {name, children, id};
+    return {name, children, id, steps: []};
 }
 
 function makeStep(type:string, label:string, nestedSteps?:Array<StepInfo>):StepInfo {
@@ -40,33 +41,48 @@ function makeStep(type:string, label:string, nestedSteps?:Array<StepInfo>):StepI
  This is basically adapted from the Storybooks entry, for the purposes of connecting a demo into the main appendEvent
  */
 export class EditorDemo extends Component {
+    state: { pipeline?: StageInfo } = {};
+    constructor() {
+        super();
+        this.loadWorkingPipeline();
+    }
+    loadWorkingPipeline() {
+        let workingCopy: any = localStorage.getItem('workingPipeline');
+        if (workingCopy) {
+            workingCopy = JSON.parse(workingCopy);
+        }
+        else {
+            let bt = [
+                makeStage("Firefox"),
+                makeStage("Safari"),
+                makeStage("Chrome"),
+                makeStage("Internet Explorer"),
+            ];
+
+            let stages = [
+                makeStage("Build"),
+                makeStage("Browser Tests", bt),
+                makeStage("Static Analysis"),
+                makeStage("Package"),
+            ];
+
+            stages[stages[0].id] = [makeStep("sh", "Run Script")];
+            stages[0].steps = [
+                makeStep("sh", "Run Script"),
+                makeStep("sh", "Run Script")
+            ];
+
+            let pipe = makeStage('pipeline');
+            pipe.children = stages;
+            workingCopy = pipe;
+        }
+        this.setState({ pipeline: workingCopy });
+    }
     render() {
-
-        let bt = [
-            makeStage("Firefox"),
-            makeStage("Safari"),
-            makeStage("Chrome"),
-            makeStage("Internet Explorer"),
-        ];
-
-        let stages = [
-            makeStage("Build"),
-            makeStage("Browser Tests", bt),
-            makeStage("Static Analysis"),
-            makeStage("Package"),
-        ];
-
-        let stageSteps = {};
-
-        stageSteps[stages[0].id] = [makeStep("sh", "Run Script")];
-        stageSteps[bt[3].id] = [
-            makeStep("sh", "Run Script"),
-            makeStep("sh", "Run Script")
-        ];
-
         return (
             <EditorPage style={pageStyles}>
-                <EditorMain stages={stages} stageSteps={stageSteps}/>
+                <Extensions.Renderer extensionPoint="pipeline.editor.css"/>
+                <EditorMain pipeline={this.state.pipeline}/>
             </EditorPage>
         );
     }

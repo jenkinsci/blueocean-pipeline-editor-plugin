@@ -59,18 +59,18 @@ export default class GenericStepEditorPanel extends Component<DefaultProps, Prop
             return null;
         }
 
-        const thisMeta = stepMetadata.filter(md => md.functionName === step.type)[0];
+        const thisMeta = stepMetadata.filter(md => md.functionName === step.name)[0];
 
         return (
             <div className="pipeline-editor-step-generic pipeline-editor-form">
                 {thisMeta.parameters.map(p => {
-                    const propTypeEditor = propertyEditorsByName[p.dataType];
+                    const propTypeEditor = propertyEditorsByName[p.type];
                     if (propTypeEditor) {
                         return React.createElement(propTypeEditor, { step: step, type: p, propName: p.name, onChange: () => this.updateStepData() });
                     }
                     return (
                         <div className="form-item" key={p.name}>
-                            <label className="form-label">{p.displayName}</label>
+                            <label className="form-label">{p.capitalizedName}</label>
                             <div className="form-input">
                                 <TextInput defaultValue={step.data[p.name]} onChange={val => { step.data[p.name] = val; this.updateStepData(); }} />
                             </div>
