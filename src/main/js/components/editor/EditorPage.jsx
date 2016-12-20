@@ -37,7 +37,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
         convertPipelineToJson(pipeline, (p, err) => {
             if (!err) {
                 const internal = convertJsonToInternalModel(p);
-                s => this.setState({showPipelineScript: false, pipelineErrors: null}),
+                this.setState({showPipelineScript: false, pipelineErrors: null}),
                 pipelineStore.setPipeline(internal);
             } else {
                 this.setState({pipelineErrors: err});
