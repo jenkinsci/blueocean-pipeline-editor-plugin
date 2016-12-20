@@ -1,5 +1,5 @@
 import { convertJsonToInternalModel }  from '../../../main/js/services/PipelineSyntaxConverter';
-import pipelineStepListStore  from '../../../main/js/services/pipelineStepListStore';
+import pipelineStepListStore  from '../../../main/js/services/PipelineStepListStore';
 import { assert } from 'chai';
 
 describe('Pipeline Syntax Converter', () => {
@@ -13,7 +13,7 @@ describe('Pipeline Syntax Converter', () => {
         delete pipelineStepListStore.stepData;
     });
     
-    it('converts agent any', () => {
+    it('converts from JSON: agent any', () => {
         const p = {
             "pipeline": {
                 "agent": {
@@ -26,7 +26,7 @@ describe('Pipeline Syntax Converter', () => {
         assert(internal.agent.value.value == 'any', "Wrong agent");
     });
 
-    it('converts agent docker', () => {
+    it('converts from JSON: agent docker', () => {
         const p = {
             "pipeline": {
                 "agent": [  {
@@ -42,7 +42,7 @@ describe('Pipeline Syntax Converter', () => {
         assert(internal.agent.key == 'docker', "Wrong agent");
     });
     
-    it('converts single stage', () => {
+    it('converts from JSON: single stage', () => {
         const p = {"pipeline": {
             "stages": [  {
                 "name": "foo",
@@ -68,7 +68,7 @@ describe('Pipeline Syntax Converter', () => {
         assert(internal.children[0].name == 'foo', "Wrong stage name");
     });
 
-    it('converts parallel stage', () => {
+    it('converts from JSON: parallel stage', () => {
         const p = {"pipeline": {
             "stages": [  {
                 "name": "parallel test",
@@ -105,7 +105,7 @@ describe('Pipeline Syntax Converter', () => {
         assert(internal.children[0].children[1].name == 'branch 2', "Wrong stage name");
     });
     
-    it('converts named parameter values properly', () => {
+    it('converts from JSON: named parameter values properly', () => {
         const p = {"pipeline": {
             "stages": [  {
                 "name": "foo",
@@ -142,7 +142,7 @@ describe('Pipeline Syntax Converter', () => {
         assert(batStep.data.returnStdout == true, "Named arguments not properly handled");
     });
     
-    it('converts unnamed parameter values properly', () => {
+    it('converts from JSON: unnamed parameter values properly', () => {
         const p = {"pipeline": {
             "stages": [  {
                 "name": "foo",
