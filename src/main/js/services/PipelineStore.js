@@ -139,6 +139,7 @@ const findParentStepByChild = function (steps, childStep) {
 // TODO: mobxify
 class PipelineStore {
     pipeline: StageInfo;
+    listeners: Function[] = [];
 
     createSequentialStage(name:string) {
         const { pipeline } = this;
@@ -324,12 +325,11 @@ class PipelineStore {
         this.listeners.map(l => l());
     }
 
-    addListener(fn) {
-        this.listeners = this.listeners || [];
+    addListener(fn: Function) {
         this.listeners.push(fn);
     }
 
-    removeListener(fn) {
+    removeListener(fn: Function) {
         const idx = this.listeners.indexOf(fn);
         this.listeners.splice(idx, 1);
     }

@@ -4,6 +4,11 @@ import React, { Component, PropTypes } from 'react';
 import { Dialog } from '@jenkins-cd/design-language';
 import pipelineStore from '../../services/PipelineStore';
 import { convertInternalModelToJson, convertJsonToPipeline, convertPipelineToJson, convertJsonToInternalModel } from '../../services/PipelineSyntaxConverter';
+import type { PipelineInfo } from '../../services/PipelineStore';
+import type { PipelineJsonContainer } from '../../services/PipelineSyntaxConverter';
+import pipelineStepListStore from '../../services/PipelineStepListStore';
+
+const PIPELINE_KEY = 'jenkins.pipeline.editor.workingCopy';
 
 type Props = {
     title?: string,
@@ -31,7 +36,59 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
         style: PropTypes.object,
     };
 
-    state:State = {};
+    pipelineUpdated: Function;
+
+    state: State = {};
+
+    currentHistoryIndex: number = -1;
+    pipelineHistory: PipelineJsonContainer[] = [];
+
+    componentWillMount() {
+        let existingPipeline: any = localStorage.getItem(PIPELINE_KEY);
+        if (existingPipeline) {
+            pipelineStepListStore.getStepListing(steps => {
+                existingPipeline = convertJsonToInternalModel(JSON.parse(existingPipeline));
+                pipelineStore.setPipeline(existingPipeline);
+            });
+        } else {
+            this.newPipeline();
+        }
+        pipelineStore.addListener(this.pipelineUpdated = p => this.savePipelineState());
+    }
+
+    componentWillUnmount() {
+        pipelineStore.removeListener(this.pipelineUpdated);
+    }
+
+    savePipelineState() {
+        if (pipelineStore.pipeline.fromHistory) {
+            delete pipelineStore.pipeline.fromHistory;
+            this.forceUpdate();
+            return;
+        }
+        const json = convertInternalModelToJson(pipelineStore.pipeline);
+
+        this.currentHistoryIndex++;
+        if (this.pipelineHistory.length > 0) {
+            this.pipelineHistory = this.pipelineHistory.slice(0, this.currentHistoryIndex);
+        }
+        this.pipelineHistory.push(json);
+        localStorage.setItem(PIPELINE_KEY, JSON.stringify(json));
+        this.forceUpdate();
+    }
+
+    undo() {
+        if (this.currentHistoryIndex < 1) {
+            return; // no history or already at the oldest
+        }
+        this.currentHistoryIndex--;
+        const json = this.pipelineHistory[this.currentHistoryIndex];
+        if (json) {
+            const internal = convertJsonToInternalModel(json);
+            internal.fromHistory = true;
+            pipelineStore.setPipeline(internal);
+        }
+    }
 
     updateStateFromPipelineScript(pipeline: string) {
         convertPipelineToJson(pipeline, (p, err) => {
@@ -76,6 +133,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                 <div className="editor-page-header">
                     <h3>{ title }</h3>
                     <div className="editor-page-header-controls">
+                        <button disabled={this.currentHistoryIndex <= 0} className="btn-secondary inverse" onClick={() => this.undo()}>Undo</button>
                         <button className="btn-secondary inverse" onClick={() => this.newPipeline()}>New</button>
                         <button className="btn inverse" onClick={() => this.showPipelineScriptDialog()}>Load/Save</button>
                     </div>
