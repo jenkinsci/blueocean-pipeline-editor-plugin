@@ -1,6 +1,7 @@
 // @flow
 
 import { Fetch, UrlConfig } from '@jenkins-cd/blueocean-core-js';
+import { UnknownSection } from './PipelineStore';
 import type { PipelineInfo, StageInfo, StepInfo } from './PipelineStore';
 import pipelineStepListStore from './PipelineStepListStore';
 
@@ -47,6 +48,24 @@ function singleValue(v: any) {
     };
 }
 
+function captureUnknownSections(pipeline: any, internal: any, ...knownSections: string[]) {
+    for (const prop of Object.keys(pipeline)) {
+        if (knownSections.indexOf(prop) >= 0) {
+            continue;
+        }
+        internal[prop] = new UnknownSection(prop, pipeline[prop]);
+    }
+}
+
+function restoreUnknownSections(internal: any, out: any) {
+    for (const prop of Object.keys(internal)) {
+        const val = internal[prop];
+        if (val instanceof UnknownSection) {
+            out[val.prop] = val.json;
+        }
+    }
+}
+
 export function convertJsonToInternalModel(json: PipelineJsonContainer): PipelineInfo {
     let idgen = { id: 0, next() { return --this.id; } };
     const pipeline = json.pipeline;
@@ -70,6 +89,9 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
     if (!pipeline.stages) {
         throw new Error('Pipeline must define stages');
     }
+
+    // capture unknown sections
+    captureUnknownSections(pipeline, out, 'agent', 'stages');
 
     for (let i = 0; i < pipeline.stages.length; i++) {
         const topStage = pipeline.stages[i];
@@ -102,6 +124,8 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
                 topStageInfo.children.push(stage);
             }
 
+            captureUnknownSections(b, stage, 'name', 'steps');
+    
             for (let stepIndex = 0; stepIndex < b.steps.length; stepIndex++) {
                 const s = b.steps[stepIndex];
                 const step = readStepFromJson(s, idgen);
@@ -119,7 +143,15 @@ function readStepFromJson(s: PipelineStep, idgen: any) {
     pipelineStepListStore.getStepListing(steps => {
         stepMeta = steps;
     });
-    const meta = stepMeta.filter(md => md.functionName === s.name)[0];
+    const meta = stepMeta.filter(md => md.functionName === s.name)[0]
+    
+    // handle unknown steps
+    || {
+        isBlockContainer: false,
+        displayName: s.name,
+        isUnknown: true,
+    };
+
     const step = {
         name: s.name,
         label: meta.displayName,
@@ -209,10 +241,14 @@ function _convertStageToJson(stage: StageInfo): PipelineStage {
 
         // TODO Currently, sub-stages are not supported, this should be recursive
         for (const child of stage.children) {
-            out.branches.push({
+            const outStage: PipelineStage = {
                 name: child.name,
                 steps: _convertStepsToJson(child.steps),
-            });
+            };
+
+            restoreUnknownSections(child, outStage);
+
+            out.branches.push(outStage);
         }
     } else {
         // single, add a 'default' branch
@@ -222,6 +258,8 @@ function _convertStageToJson(stage: StageInfo): PipelineStage {
                 steps: _convertStepsToJson(stage.steps),
             }
         ];
+
+        restoreUnknownSections(stage, out.branches[0]);
     }
 
     return out;
@@ -235,6 +273,9 @@ export function convertInternalModelToJson(pipeline: PipelineInfo): PipelineJson
         },
     };
     const outPipeline = out.pipeline;
+
+    restoreUnknownSections(pipeline, outPipeline);
+
     for (const stage of pipeline.children) {
         const s = _convertStageToJson(stage);
         outPipeline.stages.push(s);
