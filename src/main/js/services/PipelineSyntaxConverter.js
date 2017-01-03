@@ -39,6 +39,8 @@ export type PipelineStage = {
     steps?: PipelineStep[],
 };
 
+const idgen = { id: 0, next() { return --this.id; } };
+
 function singleValue(v: any) {
     if (Array.isArray(v)) {
         return v[0];
@@ -67,7 +69,6 @@ function restoreUnknownSections(internal: any, out: any) {
 }
 
 export function convertJsonToInternalModel(json: PipelineJsonContainer): PipelineInfo {
-    let idgen = { id: 0, next() { return --this.id; } };
     const pipeline = json.pipeline;
     const out: PipelineInfo = {
         id: idgen.next(),
@@ -128,7 +129,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
     
             for (let stepIndex = 0; stepIndex < b.steps.length; stepIndex++) {
                 const s = b.steps[stepIndex];
-                const step = readStepFromJson(s, idgen);
+                const step = convertStepFromJson(s);
                 stage.steps.push(step);
             }
         }
@@ -137,7 +138,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
     return out;
 }
 
-function readStepFromJson(s: PipelineStep, idgen: any) {
+export function convertStepFromJson(s: PipelineStep) {
     // this will already have been called and cached:
     let stepMeta = [];
     pipelineStepListStore.getStepListing(steps => {
@@ -149,7 +150,6 @@ function readStepFromJson(s: PipelineStep, idgen: any) {
     || {
         isBlockContainer: false,
         displayName: s.name,
-        isUnknown: true,
     };
 
     const step = {
@@ -182,7 +182,7 @@ function readStepFromJson(s: PipelineStep, idgen: any) {
     }
     if (s.children && s.children.length > 0) {
         for (const c of s.children) {
-            const child = readStepFromJson(c, idgen);
+            const child = convertStepFromJson(c);
             step.children.push(child);
         }
     }
@@ -215,7 +215,7 @@ function _convertStepArguments(step: StepInfo): PipelineNamedValueDescriptor[] {
     return out;
 }
 
-function _convertStepsToJson(steps: StepInfo[]): PipelineStep[] {
+export function convertStepsToJson(steps: StepInfo[]): PipelineStep[] {
     const out: PipelineStep[] = [];
     for (const step of steps) {
         const s: PipelineStep = {
@@ -223,14 +223,14 @@ function _convertStepsToJson(steps: StepInfo[]): PipelineStep[] {
             arguments: _convertStepArguments(step),
         };
         if (step.children && step.children.length > 0) {
-            s.children = _convertStepsToJson(step.children);
+            s.children = convertStepsToJson(step.children);
         }
         out.push(s);
     }
     return out;
 }
 
-function _convertStageToJson(stage: StageInfo): PipelineStage {
+export function convertStageToJson(stage: StageInfo): PipelineStage {
     const out: PipelineStage = {
         name: stage.name,
     };
@@ -243,7 +243,7 @@ function _convertStageToJson(stage: StageInfo): PipelineStage {
         for (const child of stage.children) {
             const outStage: PipelineStage = {
                 name: child.name,
-                steps: _convertStepsToJson(child.steps),
+                steps: convertStepsToJson(child.steps),
             };
 
             restoreUnknownSections(child, outStage);
@@ -255,7 +255,7 @@ function _convertStageToJson(stage: StageInfo): PipelineStage {
         out.branches = [
             {
                 name: 'default',
-                steps: _convertStepsToJson(stage.steps),
+                steps: convertStepsToJson(stage.steps),
             }
         ];
 
@@ -277,7 +277,7 @@ export function convertInternalModelToJson(pipeline: PipelineInfo): PipelineJson
     restoreUnknownSections(pipeline, outPipeline);
 
     for (const stage of pipeline.children) {
-        const s = _convertStageToJson(stage);
+        const s = convertStageToJson(stage);
         outPipeline.stages.push(s);
     }
     return out;
@@ -336,6 +336,30 @@ export function convertJsonToPipeline(json: string, handler: Function) {
     pipelineStepListStore.getStepListing(steps => {
         fetch(`${UrlConfig.getJenkinsRootURL()}/pipeline-model-converter/toJenkinsfile`,
             'json=' + encodeURIComponent(json), data => {
+                if (data.errors) {
+                    console.log(data);
+                }
+                handler(data.jenkinsfile, data.errors);
+            });
+    });
+}
+
+export function convertPipelineStepsToJson(pipeline: string, handler: Function) {
+    pipelineStepListStore.getStepListing(steps => {
+        fetch(`${UrlConfig.getJenkinsRootURL()}/pipeline-model-converter/stepsToJson`,
+            'jenkinsfile=' + encodeURIComponent(pipeline), data => {
+                if (data.errors) {
+                    console.log(data);
+                }
+                handler(data.json, data.errors);
+            });
+    });
+}
+
+export function convertJsonStepsToPipeline(step: PipelineStep, handler: Function) {
+    pipelineStepListStore.getStepListing(steps => {
+        fetch(`${UrlConfig.getJenkinsRootURL()}/pipeline-model-converter/stepsToJenkinsfile`,
+            'json=' + encodeURIComponent(JSON.stringify(step)), data => {
                 if (data.errors) {
                     console.log(data);
                 }
