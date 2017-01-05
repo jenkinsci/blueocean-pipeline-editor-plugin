@@ -4,6 +4,7 @@ import React, { Component, PropTypes } from 'react';
 import { EditorPipelineGraph } from './EditorPipelineGraph';
 import { EditorStepList } from './EditorStepList';
 import { EditorStepDetails } from './EditorStepDetails';
+import { AgentConfiguration } from './AgentConfiguration';
 import { EmptyStateView } from '@jenkins-cd/design-language';
 import { AddStepSelectionDialog } from './AddStepSelectionDialog';
 import pipelineStore from '../../services/PipelineStore';
@@ -242,6 +243,22 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             </div>
         ) : null;
 
+        // FIXME - agents are defined at the top stage level, this will change
+        const agentStage = selectedStage && (pipelineStore.findParentStage(selectedStage) || selectedStage);
+
+        const configPanel = pipelineStore.pipeline && (<div className="editor-config-panel" key={selectedStage?selectedStage.id:0}>
+            {selectedStage && <div>
+                <h4 className="stage-name-edit">
+                    <input defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
+                </h4>
+                <AgentConfiguration node={agentStage} onChange={agent => agent[0].key == 'none' ? (delete agentStage.agent) : (agentStage.agent = agent) && this.pipelineUpdated()} />
+            </div>}
+            {!selectedStage && <div>
+                <h4>Pipeline Configuration</h4>
+                <AgentConfiguration node={pipelineStore.pipeline} onChange={agent => (pipelineStore.pipeline.agent = agent) && this.pipelineUpdated()} />
+            </div>}
+        </div>);
+
         return (
             <div className="editor-main">
                 <div className="editor-main-graph">
@@ -253,6 +270,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                                          onCreateParallelStage={(name, parentStage) => this.createParallelStage(name, parentStage)}/>
                     }
                 </div>
+                {configPanel}
                 {titleBar}
                 {detailsOrPlaceholder}
                 {this.state.showSelectStep && <AddStepSelectionDialog
