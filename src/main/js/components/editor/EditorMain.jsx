@@ -244,7 +244,10 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         ) : null;
 
         // FIXME - agents are defined at the top stage level, this will change
-        const agentStage = selectedStage && (pipelineStore.findParentStage(selectedStage) || selectedStage);
+        let agentStage = selectedStage && (pipelineStore.findParentStage(selectedStage) || selectedStage);
+        if (pipelineStore.pipeline === agentStage) {
+            agentStage = selectedStage;
+        }
 
         const configPanel = pipelineStore.pipeline && (<div className="editor-config-panel" key={selectedStage?selectedStage.id:0}>
             {selectedStage && <div>
