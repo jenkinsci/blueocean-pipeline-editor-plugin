@@ -5,6 +5,7 @@ import { EditorPipelineGraph } from './EditorPipelineGraph';
 import { EditorStepList } from './EditorStepList';
 import { EditorStepDetails } from './EditorStepDetails';
 import { AgentConfiguration } from './AgentConfiguration';
+import { EnvironmentConfiguration } from './EnvironmentConfiguration';
 import { EmptyStateView } from '@jenkins-cd/design-language';
 import { AddStepSelectionDialog } from './AddStepSelectionDialog';
 import pipelineStore from '../../services/PipelineStore';
@@ -244,22 +245,25 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         ) : null;
 
         // FIXME - agents are defined at the top stage level, this will change
-        let agentStage = selectedStage && (pipelineStore.findParentStage(selectedStage) || selectedStage);
-        if (pipelineStore.pipeline === agentStage) {
-            agentStage = selectedStage;
+        let configurationStage = selectedStage && (pipelineStore.findParentStage(selectedStage) || selectedStage);
+        if (pipelineStore.pipeline === configurationStage) {
+            configurationStage = selectedStage;
+        }
+        if (!selectedStage) {
+            configurationStage = pipelineStore.pipeline;
         }
 
         const configPanel = pipelineStore.pipeline && (<div className="editor-config-panel" key={selectedStage?selectedStage.id:0}>
-            {selectedStage && <div>
+            <div>
                 <h4 className="stage-name-edit">
+                    {selectedStage && 
                     <input defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
+                    }
+                    {!selectedStage && 'Pipeline Configuration'}
                 </h4>
-                <AgentConfiguration node={agentStage} onChange={agent => agent[0].key == 'none' ? (delete agentStage.agent) : (agentStage.agent = agent) && this.pipelineUpdated()} />
-            </div>}
-            {!selectedStage && <div>
-                <h4>Pipeline Configuration</h4>
-                <AgentConfiguration node={pipelineStore.pipeline} onChange={agent => (pipelineStore.pipeline.agent = agent) && this.pipelineUpdated()} />
-            </div>}
+                <AgentConfiguration node={configurationStage} onChange={agent => agent[0].key == 'none' ? (delete configurationStage.agent) : (configurationStage.agent = agent) && this.pipelineUpdated()} />
+                <EnvironmentConfiguration node={configurationStage} onChange={e => this.pipelineUpdated()} />
+            </div>
         </div>);
 
         return (

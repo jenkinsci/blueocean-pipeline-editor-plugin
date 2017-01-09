@@ -4,6 +4,7 @@ import React, { Component, PropTypes } from 'react';
 import pipelineMetadataService from '../../services/PipelineMetadataService';
 import type { PipelineInfo, StageInfo } from '../../services/PipelineStore';
 import { Dropdown } from '@jenkins-cd/design-language';
+import { Split } from './Split';
 
 type Props = {
     node: PipelineInfo|StageInfo,
@@ -97,19 +98,23 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
         }
         
         return (<div className="agent-select">
-            <h2>Agent Configuration</h2>
+            <h4>Agent Configuration</h4>
             <Dropdown labelField="symbol" options={agents}
                 defaultOption={selectedAgentMetadata}
                 onChange={agent => this.onAgentChanged(agent)} />
+            <Split>
             {selectedAgent && selectedAgentMetadata && <div className="agent-configuration">
                 {selectedAgentMetadata.parameters.map(param => <div className="agent-param">
                     <label>
-                        {param.capitalizedName}
-                        <input defaultValue={this.findOrCreateValue(selectedAgent, param.name).value}
-                            onChange={e => this.setAgentKey(param.name, e.target.value)}/>
+                        <div>{param.capitalizedName}</div>
+                        <div>
+                            <input defaultValue={this.findOrCreateValue(selectedAgent, param.name).value}
+                                onChange={e => this.setAgentKey(param.name, e.target.value)}/>
+                        </div>
                     </label>
                 </div>)}
             </div>}
+            </Split>
         </div>);
     }
 }
