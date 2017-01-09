@@ -46,7 +46,11 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
     }
 
     doUpdate() {
-        this.forceUpdate();
+        if (!pipelineStore.findParentStage(pipelineStore.pipeline, this.state.selectedStage)) {
+            this.setState({selectedStage: null});
+        } else {
+            this.forceUpdate();
+        }
     }
 
     componentWillReceiveProps(nextProps:Props) {
@@ -261,13 +265,13 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                     }
                     {!selectedStage && 'Pipeline Configuration'}
                 </h4>
-                <AgentConfiguration node={configurationStage} onChange={agent => agent[0].key == 'none' ? (delete configurationStage.agent) : (configurationStage.agent = agent) && this.pipelineUpdated()} />
-                <EnvironmentConfiguration node={configurationStage} onChange={e => this.pipelineUpdated()} />
+                <AgentConfiguration key={'agent'+configurationStage.id} node={configurationStage} onChange={agent => agent[0].key == 'none' ? (delete configurationStage.agent) : (configurationStage.agent = agent) && this.pipelineUpdated()} />
+                <EnvironmentConfiguration key={'env'+configurationStage.id} node={configurationStage} onChange={e => this.pipelineUpdated()} />
             </div>
         </div>);
 
         return (
-            <div className="editor-main">
+            <div className="editor-main" key={pipelineStore.pipeline && pipelineStore.pipeline.id}>
                 <div className="editor-main-graph">
                     {pipelineStore.pipeline &&
                     <EditorPipelineGraph stages={pipelineStore.pipeline.children}

@@ -69,7 +69,7 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
                 <Split>
                     <TextInput key={idx} defaultValue={env.key} onChange={val => { env.key = val; this.props.onChange(); }} />
                     <TextInput key={'val'+idx} defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
-                    <button className="remove" onClick={e => this.removeEnviromentEntry(env)}>Remove</button>
+                    <button className="remove" onClick={e => { this.removeEnviromentEntry(env); this.props.onChange(); }}>Remove</button>
                 </Split>
             </div>)}
         </div>);
