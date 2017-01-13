@@ -4,7 +4,7 @@ import { assert } from 'chai';
 
 describe('Pipeline Syntax Converter', () => {
     before(() => {
-        pipelineMetadataService.stepData = JSON.parse(
+        pipelineMetadataService.cache.pipelineStepMetadata = JSON.parse(
             require("fs").readFileSync(
                 require("path").normalize(__dirname + "/../StepMetadata.json", "utf8")));
     });

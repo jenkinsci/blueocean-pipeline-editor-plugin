@@ -12,9 +12,14 @@ export type PipelineJsonContainer = {
     pipeline: PipelineJson,
 };
 
+export type PipelineAgent = {
+    type: string,
+    arguments: PipelineNamedValueDescriptor[],
+};
+
 export type PipelineJson = {
     stages: PipelineStage[],
-    agent: PipelineValueDescriptor[],
+    agent: PipelineAgent,
     environment: PipelineEnvironment,
 };
 
@@ -248,11 +253,11 @@ export function convertStageToJson(stage: StageInfo): PipelineStage {
     // FIXME this is going to have to change, there's currently no way to define
     // an agent for each parallel branch, with nested stages and/or execution
     // graph order, this will go away in favor of a different mechanism...
-    if (stage.agent && stage.agent[0].key != 'none') {
+    if (stage.agent && stage.agent && stage.agent.type != 'none') {
         out.agent = stage.agent;
     }
 
-    if (stage.environment && stage.environment[0].key != 'none') {
+    if (stage.environment && stage.environment.length && stage.environment[0].key != 'none') {
         out.environment = stage.environment;
     }
 
@@ -295,7 +300,9 @@ export function convertInternalModelToJson(pipeline: PipelineInfo): PipelineJson
     };
     const outPipeline = out.pipeline;
 
-    outPipeline.environment = pipeline.environment;
+    if (pipeline.environment && pipeline.environment.length) {
+        outPipeline.environment = pipeline.environment;
+    }
 
     restoreUnknownSections(pipeline, outPipeline);
 

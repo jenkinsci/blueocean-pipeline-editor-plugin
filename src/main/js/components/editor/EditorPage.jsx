@@ -109,7 +109,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                 if (!err) {
                     this.setState({showPipelineScript: true, pipelineErrors: null, pipelineScript: result});
                 } else {
-                    this.setState({showPipelineScript: true, pipelineErrors: err});
+                    this.setState({showPipelineScript: true, pipelineErrors: err, pipelineScript: ''});
                 }
             });
         } else {
@@ -145,7 +145,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                         buttons={<div><button onClick={e => this.updateStateFromPipelineScript(this.refs.pipelineScript.value)}>Update</button></div>}>
                         {this.state.pipelineErrors &&
                             <div className="errors">
-                                {this.state.pipelineErrors.map(err => <div className="error">{err}</div>)}
+                                {this.state.pipelineErrors.map(err => <div className="error">{err.location && err.location.join('/')} {err.error}</div>)}
                             </div>
                         }
                         <div className="editor-text-area">

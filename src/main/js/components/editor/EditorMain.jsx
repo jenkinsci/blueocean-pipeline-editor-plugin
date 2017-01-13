@@ -265,7 +265,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                     }
                     {!selectedStage && 'Pipeline Configuration'}
                 </h4>
-                <AgentConfiguration key={'agent'+configurationStage.id} node={configurationStage} onChange={agent => agent[0].key == 'none' ? (delete configurationStage.agent) : (configurationStage.agent = agent) && this.pipelineUpdated()} />
+                <AgentConfiguration key={'agent'+configurationStage.id} node={configurationStage} onChange={agent => (selectedStage && agent.type == 'none' ? delete configurationStage.agent : configurationStage.agent = agent) && this.pipelineUpdated()} />
                 <EnvironmentConfiguration key={'env'+configurationStage.id} node={configurationStage} onChange={e => this.pipelineUpdated()} />
             </div>
         </div>);

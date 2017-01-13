@@ -1,6 +1,7 @@
 // @flow
 
 import React, { Component, PropTypes } from 'react';
+import type { PipelineAgent } from '../../services/PipelineSyntaxConverter';
 import pipelineMetadataService from '../../services/PipelineMetadataService';
 import type { PipelineInfo, StageInfo } from '../../services/PipelineStore';
 import { Dropdown } from '@jenkins-cd/design-language';
@@ -8,12 +9,12 @@ import { Split } from './Split';
 
 type Props = {
     node: PipelineInfo|StageInfo,
-    onChange: (agent: Object[]) => any,
+    onChange: (agent: PipelineAgent) => any,
 };
 
 type State = {
     agents: ?any,
-    selectedAgent: Object[],
+    selectedAgent: PipelineAgent,
 };
 
 type DefaultProps = typeof AgentConfiguration.defaultProps;
@@ -40,38 +41,53 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
         this.setState({selectedAgent: nextProps.node.agent});
     }
 
-    findOrCreateValue(list: Object[], key: string) {
-        for (const arg of list) {
-            if (arg.key === key) {
-                return arg.value;
+    getRealOrEmptyArg(key: string) {
+        const { selectedAgent } = this.state;
+        if (selectedAgent.arguments) {
+            for (const arg of selectedAgent.arguments) {
+                if (arg.key === key) {
+                    return arg;
+                }
             }
         }
-        const val = {
+        return {
             key: key,
             value: {
                 isLiteral: true,
                 value: '',
             }
         };
-        list.push(val);
         return val;
     }
 
-    setAgentKey(key: string, value: string) {
+    setAgentValue(key: string, value: string) {
         const { selectedAgent } = this.state;
-        const val = this.findOrCreateValue(selectedAgent, key);
-        val.value = value;
+        const val = this.getRealOrEmptyArg(key);
+        const idx = selectedAgent.arguments.indexOf(val);
+
+        // remove any existing values
+        if (idx !== -1) {
+            selectedAgent.arguments.splice(idx, 1);
+        }
+        // add the value if not empty
+        if (value) {
+            selectedAgent.arguments.push({
+                key: key,
+                value: {
+                    isLiteral: true,
+                    value: value,
+                },
+            });
+        }
         this.props.onChange(selectedAgent);
     }
 
-    onAgentChanged(agent) {
+    onAgentChanged(agent: any) {
         console.log('agent changed', agent);
-        const selectedAgent = [
-            {
-                key: agent.symbol,
-                value: { isLiteral: true, value: '' },
-            }
-        ];
+        const selectedAgent = {
+            type: agent.symbol, // agent is metadata
+            arguments: [],
+        };
         this.setState({selectedAgent: selectedAgent});
         this.props.onChange(selectedAgent);
     }
@@ -87,12 +103,10 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
         // find the parameter matching the symbol to determine which agent is selected
         let selectedAgentMetadata;
         if (selectedAgent) {
-            agents: for (const agent of agents) {
-                for (const arg of selectedAgent) {
-                    if (arg.key === agent.symbol) {
-                        selectedAgentMetadata = agent;
-                        break agents;
-                    }
+            for (const agent of agents) {
+                if (selectedAgent.type === agent.symbol) {
+                    selectedAgentMetadata = agent;
+                    break;
                 }
             }
         }
@@ -105,11 +119,11 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
             <Split>
             {selectedAgent && selectedAgentMetadata && <div className="agent-configuration">
                 {selectedAgentMetadata.parameters.map(param => <div className="agent-param">
-                    <label>
+                    <label key={selectedAgent.type + '/' + param.name}>
                         <div>{param.capitalizedName}</div>
                         <div>
-                            <input defaultValue={this.findOrCreateValue(selectedAgent, param.name).value}
-                                onChange={e => this.setAgentKey(param.name, e.target.value)}/>
+                            <input defaultValue={this.getRealOrEmptyArg(param.name).value.value}
+                                onChange={e => this.setAgentValue(param.name, e.target.value)}/>
                         </div>
                     </label>
                 </div>)}
