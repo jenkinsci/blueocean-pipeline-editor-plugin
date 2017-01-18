@@ -90,7 +90,7 @@ function convertEnvironmentToInternal(environment: any[]): any[] {
         o.id = idgen.next();
         return o;
     });
-};
+}
 
 export function convertJsonToInternalModel(json: PipelineJsonContainer): PipelineInfo {
     const pipeline = json.pipeline;
