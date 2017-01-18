@@ -64,8 +64,8 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
         this.props.onChange();
     }
 
-    removeEnviromentEntry(entry) {
-        this.props.node.environment = this.props.node.environment.filter(e => e != entry);
+    removeEnviromentEntry(entry, idx) {
+        this.props.node.environment.splice(idx,1);
         this.props.onChange();
     }
 
@@ -84,10 +84,10 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
                 <button onClick={e => this.addEnvironmentEntry()} title="Add"  className="environment-add-delete-icon add">{addIcon()}</button>
             </Split>
             {node.environment && node.environment.map((env, idx) => <div className="environment-entry">
-                <Split>
-                    <TextInput key={idx} defaultValue={env.key} onChange={val => { env.key = val; this.props.onChange(); }} />
-                    <TextInput key={'val'+idx} defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
-                    <button onClick={e => { this.removeEnviromentEntry(env); this.props.onChange(); }} title="Remove"  className="environment-add-delete-icon delete">{deleteIcon()}</button>
+                <Split key={`environment${env.key}`}>
+                    <TextInput defaultValue={env.key} onChange={val => { env.key = val; this.props.onChange(); }} />
+                    <TextInput defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
+                    <button onClick={e => { this.removeEnviromentEntry(env, idx); this.props.onChange(); }} title="Remove"  className="environment-add-delete-icon delete">{deleteIcon()}</button>
                 </Split>
             </div>)}
         </div>);
