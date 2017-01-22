@@ -33,8 +33,14 @@
 }
 
 .editor-button-bar {
-    padding: 1.5rem 0;
+    padding: 4px 0;
     width: 100%;
+}
+
+.editor-step .editor-button-bar {
+    padding: 2px 2px 2px 28px;
+    width: 100%;
+    background: #cdcdcd;
 }
 
 //--[ Outer Editor Component ]------------------------------------------------------------------------------------------
@@ -59,7 +65,7 @@
     justify-content: center;
     background: @top-bg;
     border-bottom: solid 1px @hr-color;
-    align-items:center;
+    align-items: flex-start;
     overflow:auto;
 }
 
@@ -198,6 +204,13 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    button.add svg {
+        fill: #fff;
+        vertical-align: middle;
+        margin-right: 5px;
+        margin-top: -2px;
+    }
 }
 
 .editor-step {
@@ -221,9 +234,6 @@
 .editor-step-main {
     width: 100%;
     border-bottom: solid 1px @hr-color;
-    padding: 0.5rem 0rem 0.5rem 1rem;
-    display: flex;
-    align-items: flex-start;
 }
 
 .editor-step.selected > .editor-step-main {
@@ -231,10 +241,15 @@
 }
 
 .editor-step-content {
-    display: flex;
-    flex-direction: column;
-    flex-grow: 1;
-    align-items: flex-start;
+    padding: 11px 16px;
+    cursor: pointer;
+    position: relative;
+}
+
+.editor-step .editor-step .editor-step-main { // nested steps
+    border-right: 0;
+    border-left-width: 24px;
+    position: relative;
 }
 
 //.delete-step-button {
@@ -249,22 +264,45 @@
 
 .editor-step-title {
     width: 100%;
-    display: flex;
 }
 
 .editor-step-label {
+    display: block;
     font-weight: bold;
     font-size: 110%;
     padding-top: 0.3rem;
     padding-bottom: 0.3rem;
-    flex-grow: 1;
+}
+
+.editor-step-summary {
+    display: block;
+    color: #cdcdcd;
+    font-size: 14px;
 }
 
 .editor-nested-steps {
-    padding-top: 0.5rem;
-    padding-bottom: 0.5rem;
     width: 100%;
 }
+
+// updated editor steps in the config panel
+.editor-step-main {
+    border: 1px solid #cdcdcd;
+    border-top: 0;
+}
+
+.editor-step:first-child .editor-step-main {
+    border-top: solid 1px #cdcdcd;
+    border-bottom: 0;
+}
+
+.editor-step-grab {
+    display: none;
+}
+
+.editor-button-bar > button {
+    width: 100%;
+}
+
 
 //--[ Step Details ]----------------------------------------------------------------------------------------------------
 
@@ -291,6 +329,116 @@
 .editor-step-detail-label {
     font-size:16px;
     font-family: @font-family-header;
+}
+
+// sheets
+.editor-config-panel.global {
+    width: 296px;
+}
+
+.editor-config-panel.stage {
+    width: 296px;
+}
+
+.editor-config-panel.step {
+    width: 296px;
+}
+
+.editor-step-child-icon {
+    position: absolute;
+    left: -20px;
+    top: 50%;
+    margin-top: -7px;
+    
+    svg {
+        fill: #fff;
+    }
+}
+
+.sheet-container {
+    .sheet {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        background: #f8f8f8;
+        padding: 32px;
+
+        + .sheet {
+            box-shadow: -2px 0px 8px rgba(0, 0, 0, 0.20);
+        }
+        .sheet-header {
+            position: relative;
+            min-height: 34px;
+
+            h4 {
+                padding: 0 30px;
+
+                input {
+                    background: transparent;
+                    border: 0;
+                    padding: 2.0em 29px 0.3em 31px;
+                    border-bottom: 1px solid #cdd7e3;
+                    width: 100%;
+                    color: #4a4a4a;
+                    margin: -30px;
+                    box-sizing: content-box;
+
+                    &:focus {
+                        outline: none;
+                        border-bottom-color: @brand-color;
+                    }
+                }
+
+                input[type=text], .Dropdown-button {
+                    border-color: #cdcdcd;
+                }
+            }
+        }
+        .back-from-sheet {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            margin-top: -13px;
+            cursor: pointer;
+
+            svg {
+                fill: #c3cfd7;
+            }
+
+            &:hover svg {
+                fill: #4a4a4a;
+            }
+        }
+        
+        &-enter {
+            right: -60px;
+            opacity: 0;
+            z-index: 2;
+            &-active {
+                transition: all 100ms;
+                right: 0;
+                opacity: 1;
+            }
+            // when another entering sheet is present, don't scroll it
+            + .sheet-leave-active {
+                margin-left: 0;
+                left: auto;
+                opacity: 1;
+                box-shadow: -0 0px 0 rgba(0, 0, 0, 0.00);
+            }
+        }
+        &-leave {
+            right: 0;
+            opacity: 1;
+            z-index: 1;
+            &-active {
+                transition: all 100ms;
+                right: -32px;
+                opacity: 0;
+            }
+        }
+    }
 }
 
 //--[ Step Select Dialog ]----------------------------------------------------------------------------------------------------
@@ -422,16 +570,6 @@
     margin-top: .75em;
 }
 
-.editor-config-panel {
-    position: absolute;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    background: #f8f8f8;
-    padding: 32px;
-    width: 360px;
-}
-
 .split {
     display: table-row;
     .split-child {
@@ -448,28 +586,8 @@
     border-radius: 3px;
 }
 
-.editor-config-panel > div > * {
-    margin: .2em 0 1em 0;
-}
-
-.editor-config-panel {
-    .stage-name-edit input {
-        background: rgba(255,255,255,0.5);
-        border: 0;
-        border: none;
-        padding: .2em 0;
-        border-bottom: 1px solid #cdd7e3;
-        width: 100%;
-
-        &:focus {
-            outline: none;
-            border-bottom-color: @brand-color;
-        }
-    }
-
-    input[type=text], .Dropdown-button {
-        border-color: rgba(73, 73, 73, 0.25);
-    }
+.editor-text-area textarea {
+    font: 13px monospace;
 }
 
 .editor-config-panel > div > div > h5 {
