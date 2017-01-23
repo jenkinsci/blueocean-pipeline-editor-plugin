@@ -1,9 +1,9 @@
 // @flow
 
 import React, { Component, PropTypes } from 'react';
-import { getAddIconGroup, getGrabIconGroup, getDeleteIconGroup } from './common';
+import { getAddIconGroup, getGrabIconGroup } from './common';
 import pipelineMetadataService from '../../services/PipelineMetadataService';
-import type {StepInfo} from './common';
+import type { StepInfo } from '../../services/PipelineStore';
 import { Icon } from "@jenkins-cd/react-material-icons";
 
 type Props = {
@@ -11,8 +11,7 @@ type Props = {
     selectedStep?: ?StepInfo,
     onAddStepClick?: () => any,
     onStepSelected?: (step:StepInfo) => any,
-    onDeleteStepClick?: (step:StepInfo) => any,
-    onAddChildStepClick?: (step:StepInfo) => any
+    onAddChildStepClick?: (step:StepInfo) => any,
 }
 
 type State = {
@@ -50,7 +49,7 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
         }
     }
 
-    renderStep(step:StepInfo, selectedStep:?StepInfo, isChild = false) {
+    renderStep(step:StepInfo, selectedStep:?StepInfo, isChild: boolean = false) {
 
         let classNames = ["editor-step"];
 
@@ -100,14 +99,6 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
                                 step.data[p.name]
                             )}
                             </span>
-                            {/*  {p.name}: 
-                            <svg width="24"
-                                 height="24"
-                                 className="delete-step-button"
-                                 onClick={(e) => this.deleteStepClicked(step, e)}>
-                                <g transform="translate(12,12)">{ getDeleteIconGroup(12) }</g>
-                            </svg>
-                            */}
                         </div>
                     </div>
 
@@ -116,16 +107,6 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
                 </div>
             </div>
         );
-    }
-
-    deleteStepClicked(step:StepInfo, e:HTMLEvent) {
-        e.stopPropagation(); // Don't bubble up to parent
-
-        const {onDeleteStepClick} = this.props;
-
-        if (onDeleteStepClick) {
-            onDeleteStepClick(step);
-        }
     }
 
     stepClicked(step:StepInfo, e:HTMLEvent) {
@@ -159,7 +140,6 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
     }
 
     render() {
-
         const {steps} = this.props;
         const {selectedStep} = this.state;
 

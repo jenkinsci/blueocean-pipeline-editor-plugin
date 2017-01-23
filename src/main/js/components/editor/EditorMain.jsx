@@ -69,7 +69,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             selectedStep: null
         }, e => {
             setTimeout(() => {
-                document.querySelector('.stage-name-edit input').focus();
+                document.querySelector('.stage-name-edit').focus();
             }, 200);
         });
     }
@@ -145,7 +145,11 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
 
     addStep(step: any) {
         const newStep = pipelineStore.addStep(this.state.selectedStage, this.state.parentStep, step);
-        this.setState({showSelectStep: false, selectedStep: newStep});
+        this.setState({showSelectStep: false, selectedStep: newStep}, e => {
+            setTimeout(() => {
+                document.querySelector('.editor-step-detail input,.editor-step-detail textarea').focus();
+            }, 200);
+        });
     }
 
     deleteStep(step: any) {
@@ -262,7 +266,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             onClose={e => this.graphSelectedStageChanged(null)}
             title={
                 <div>
-                    <input defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
+                    <input className="stage-name-edit" defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
                     <MoreMenu>
                         <a onClick={e => this.deleteStageClicked(e)}>Delete</a>
                     </MoreMenu>

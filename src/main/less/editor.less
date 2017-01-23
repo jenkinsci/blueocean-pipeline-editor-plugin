@@ -262,6 +262,10 @@
     display: block;
     color: @hr-color;
     font-size: 14px;
+    max-height: 35px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: pre;
 }
 
 .editor-nested-steps {
@@ -614,7 +618,7 @@ textarea.editor-step-detail-script {
     font: 13px monospace;
 }
 
-.editor-config-panel > div > div > h5 {
+.editor-config-panel h5 {
     margin: .2em 0 .8em 0;
     border-bottom: 1px solid rgba(204, 215, 227, 0.5);
     padding: .3em 0;

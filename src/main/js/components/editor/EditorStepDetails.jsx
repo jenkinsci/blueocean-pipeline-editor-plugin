@@ -2,7 +2,7 @@
 
 import React, {Component, PropTypes} from 'react';
 import pipelineMetadataService from '../../services/PipelineMetadataService';
-import type {StepInfo} from './common';
+import type { StepInfo } from '../../services/PipelineStore';
 import GenericStepEditor from './steps/GenericStepEditor';
 import UnknownStepEditor from './steps/UnknownStepEditor';
 
@@ -19,11 +19,9 @@ for (let e of allStepEditors) {
 type Props = {
     step?: ?StepInfo,
     onDataChange?: (newValue:any) => void,
-    onDeleteStepClick?: (step:StepInfo) => any
 }
 
 export class EditorStepDetails extends Component {
-
     props:Props;
 
     state:{
@@ -60,16 +58,6 @@ export class EditorStepDetails extends Component {
         }
     }
 
-    deleteStepClicked(e: HTMLEvent) {
-        e.target.blur(); // Don't leave the button focused
-
-        const {onDeleteStepClick, step} = this.props;
-
-        if (step && onDeleteStepClick) {
-            onDeleteStepClick(step);
-        }
-    }
-    
     getStepEditor(step) {
         const editor = stepEditorsByName[step.name];
         if (editor) {
