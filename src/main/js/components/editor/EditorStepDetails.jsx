@@ -103,9 +103,6 @@ export class EditorStepDetails extends Component {
         return (
             <div className="editor-step-detail">
                 <StepEditor key={step.id} onChange={step => this.commitValue(step)} step={step} />
-                <div className="editor-button-bar">
-                    <button className="btn-secondary editor-delete-btn" onClick={(e) => this.deleteStepClicked(e)}>Delete step</button>
-                </div>
             </div>
         );
     }

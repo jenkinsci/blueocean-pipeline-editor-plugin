@@ -358,7 +358,7 @@ textarea.editor-step-detail-script {
             }
 
             .back-from-sheet {
-                + h4, + input {
+                + h4, + div > input {
                     padding: 8px 2px 8px 31px;
                 }
             }
@@ -420,10 +420,46 @@ textarea.editor-step-detail-script {
             opacity: 1;
             z-index: 1;
             &-active {
-                transition: all 300ms;
-                transition-timing-function: cubic-bezier(0.805, 0.050, 0.955, 0.290);
+                transition: all 200ms;
+                transition-timing-function: cubic-bezier(0.805, 0.050, 0.955, 0.290); // very slow leaving
                 right: -32px;
                 opacity: 0;
+            }
+        }
+    }
+}
+
+.more-menu {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    margin-top: -11px;
+    cursor: pointer;
+
+    svg {
+        fill: @brand-color;
+    }
+
+    .menu-dropdown {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        margin-top: 7px;
+        background: #fff;
+        display: inline-block;
+        padding: 4px 0;
+        border-radius: 3px;
+        box-shadow: 0 0 6px rgba(0,0,0,0.25);
+        font-size: 14px;
+
+        > a {
+            display: block;
+            padding: 5px 18px;
+            color: #444;
+
+            &:hover, &:focus, &:active {
+                background: rgba(73, 143, 226, 0.1);
+                text-decoration: none;
             }
         }
     }

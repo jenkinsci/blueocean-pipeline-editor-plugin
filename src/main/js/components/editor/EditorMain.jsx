@@ -11,6 +11,7 @@ import { AddStepSelectionDialog } from './AddStepSelectionDialog';
 import pipelineStore from '../../services/PipelineStore';
 import type { StageInfo, StepInfo } from '../../services/PipelineStore';
 import { Sheets } from '../Sheets';
+import { MoreMenu } from '../MoreMenu';
 import { Icon } from "@jenkins-cd/react-material-icons";
 
 type Props = {
@@ -260,7 +261,12 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         const stageConfigPanel = selectedStage && (<div className="editor-config-panel stage" key={'stageConfig'+selectedStage.id}
             onClose={e => this.graphSelectedStageChanged(null)}
             title={
-                <input defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
+                <div>
+                    <input defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
+                    <MoreMenu>
+                        <a onClick={e => this.deleteStageClicked(e)}>Delete</a>
+                    </MoreMenu>
+                </div>
             }>
             <EditorStepList steps={steps}
                         selectedStep={selectedStep}
@@ -277,19 +283,19 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         const stepConfigPanel = selectedStep && (<EditorStepDetails className="editor-config-panel step"
                 step={selectedStep} key={steps.indexOf(selectedStep)}
                 onDataChange={newValue => this.stepDataChanged(newValue)}
-                onDeleteStepClick={step => this.deleteStep(step)}
                 onClose={e => this.selectedStepChanged(null)}
-                title={<h4>{selectedStep.label}</h4>} />);
+                title={<h4>
+                    {selectedStep.label}
+                    <MoreMenu>
+                        <a onClick={e => this.deleteStep(selectedStep)}>Delete</a>
+                    </MoreMenu>
+                </h4>} />);
 
         const sheets = [];
         if (globalConfigPanel) sheets.push(globalConfigPanel);
         if (stageConfigPanel) sheets.push(stageConfigPanel);
         if (stepConfigPanel) sheets.push(stepConfigPanel);
-/*        
-                {globalConfigPanel}
-                {stageConfigPanel}
-                {detailsOrPlaceholder}
-*/
+
         return (
             <div className="editor-main" key={pipelineStore.pipeline && pipelineStore.pipeline.id}>
                 <div className="editor-main-graph" onClick={e => this.setState({selectedStage: null, selectedStep: null})}>
