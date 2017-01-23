@@ -358,12 +358,12 @@ textarea.editor-step-detail-script {
 
             h4, input {
                 border-bottom: 1px solid #cdd7e3;
-                padding: 8px 2px 8px 1px;
+                padding: 8px 30px 8px 1px;
             }
 
             .back-from-sheet {
                 + h4, + div > input {
-                    padding: 8px 2px 8px 31px;
+                    padding: 8px 30px 8px 31px;
                 }
             }
 
@@ -470,6 +470,58 @@ textarea.editor-step-detail-script {
 }
 
 //--[ Step Select Dialog ]----------------------------------------------------------------------------------------------------
+
+.editor-step-selector > div {
+    border: 1px solid #cdcdcd;
+    border-top: 0;
+    background: #fff;
+    padding: 10px 16px;
+    font-size: 16px;
+    cursor: pointer;
+    width: 296px;
+
+    &:first-child {
+        border-top: 1px solid #cdcdcd;
+    }
+
+    &:hover, &:active, &:focus {
+        background: #cdcdcd;
+    }
+}
+
+.editor-step-search {
+    position: relative;
+    margin: -32px 0 4px 0;
+
+    > svg {
+        position: absolute;
+        top: 50%;
+        left: 3px;
+        margin-top: -5px;
+        z-index: 1;
+    }
+    > input {
+        width: 100%;
+        padding: 22px 13px 8px 31px;
+        z-index: 2;
+        position: relative;
+        display: block;
+        background: transparent;
+        border: 0;
+        font-size: 1.2em;
+        
+        .placeholder({
+            color: #888;
+            font-style: italic;
+        });
+        &:focus {
+            border-color: #4a90e2;
+            border-radius: 0px;
+            outline: none;
+            margin: 0;
+        }
+    }
+}
 
 .placeholder(@rules) {
     &::-webkit-input-placeholder {

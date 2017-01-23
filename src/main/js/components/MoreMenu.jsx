@@ -24,11 +24,11 @@ export class MoreMenu extends React.Component {
                 e = e || window.event;
                 const parent = this.refs.dropdown;
                 let elem = e.target;
-                while (elem && elem != document) {
+                while (elem) {
                     if (elem === parent) {
-                        return; // nothing to do
+                        return true; // continue
                     }
-                    elem = elem.parent;
+                    elem = elem.parentElement;
                 }
                 this.closePopover();
             }
