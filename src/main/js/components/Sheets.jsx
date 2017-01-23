@@ -34,7 +34,7 @@ export class Sheet extends React.Component {
                         <Icon icon="arrow_back"/>
                     </span>
                 }
-                {child.props.title}
+                {child.getTitle && child.getTitle() || child.props.title}
             </div>
             <div className="sheet-body">
                 {child}
@@ -70,9 +70,9 @@ export class Sheets extends React.Component {
         if (!this.props.children) {
             return;
         }
-        const { transitionDuration = 500, transitionClass = 'sheet' } = this.props;
+        const { transitionDuration = 400, transitionClass = 'sheet' } = this.props;
         const sheetChildren = this.getActiveSheets()
-            .map(c => <Sheet>{c}</Sheet>);
+            .map(c => <Sheet key={c.key}>{c}</Sheet>);
         return (
             <div className="sheet-container">
                 <ReactCSSTransitionGroup

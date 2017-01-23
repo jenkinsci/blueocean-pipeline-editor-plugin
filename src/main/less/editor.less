@@ -2,7 +2,7 @@
 
 //--[ Theme ]-----------------------------------------------------------------------------------------------------------
 
-@hr-color: #ccc;
+@hr-color: #cdcdcd;
 @grab-color: #949393;
 @selection-color: #ddd;
 @editor-background: #fff;
@@ -38,9 +38,9 @@
 }
 
 .editor-step .editor-button-bar {
-    padding: 2px 2px 2px 28px;
+    padding: 4px 2px 4px 28px;
     width: 100%;
-    background: #cdcdcd;
+    background: @hr-color;
 }
 
 //--[ Outer Editor Component ]------------------------------------------------------------------------------------------
@@ -217,10 +217,6 @@
     width: 100%;
     display: flex;
     background: @editor-background;
-
-    &:first-child .editor-step-main {
-        border-top: solid 1px @hr-color;
-    }
 }
 
 .editor-step-grab {
@@ -233,7 +229,8 @@
 
 .editor-step-main {
     width: 100%;
-    border-bottom: solid 1px @hr-color;
+    border: 1px solid @hr-color;
+    border-width: 0 1px;
 }
 
 .editor-step.selected > .editor-step-main {
@@ -244,26 +241,13 @@
     padding: 11px 16px;
     cursor: pointer;
     position: relative;
+    border-bottom: 1px solid @hr-color;
 }
 
 .editor-step .editor-step .editor-step-main { // nested steps
     border-right: 0;
     border-left-width: 24px;
     position: relative;
-}
-
-//.delete-step-button {
-//    visibility: hidden;
-//    cursor: pointer;
-//    margin-right: 1rem;
-//}
-//
-//.editor-step.selected > .editor-step-main > .editor-step-content > .editor-step-title > .delete-step-button {
-//    visibility: visible;
-//}
-
-.editor-step-title {
-    width: 100%;
 }
 
 .editor-step-label {
@@ -276,7 +260,7 @@
 
 .editor-step-summary {
     display: block;
-    color: #cdcdcd;
+    color: @hr-color;
     font-size: 14px;
 }
 
@@ -285,14 +269,8 @@
 }
 
 // updated editor steps in the config panel
-.editor-step-main {
-    border: 1px solid #cdcdcd;
-    border-top: 0;
-}
-
-.editor-step:first-child .editor-step-main {
-    border-top: solid 1px #cdcdcd;
-    border-bottom: 0;
+.editor-steps > .editor-step:first-child > .editor-step-main {
+    border-top: solid 1px @hr-color;
 }
 
 .editor-step-grab {
@@ -307,13 +285,15 @@
 //--[ Step Details ]----------------------------------------------------------------------------------------------------
 
 .editor-step-detail {
-    padding:2rem 2rem 0 2rem;
-    flex-grow:1;
-    display:flex;
+    flex-grow: 1;
+    display: flex;
     flex-direction: column;
-    width:100%;
-    height:100%;
-    border-top: solid 1px @hr-color;
+    min-width: 296px;
+}
+
+textarea.editor-step-detail-script {
+    min-width: 500px;
+    min-height: 400px;
 }
 
 .editor-step-detail-script {
@@ -363,36 +343,42 @@
         bottom: 0;
         background: #f8f8f8;
         padding: 32px;
+        overflow: auto;
 
         + .sheet {
             box-shadow: -2px 0px 8px rgba(0, 0, 0, 0.20);
         }
         .sheet-header {
             position: relative;
-            min-height: 34px;
+            margin-bottom: 22px;
 
-            h4 {
-                padding: 0 30px;
+            h4, input {
+                border-bottom: 1px solid #cdd7e3;
+                padding: 8px 2px 8px 1px;
+            }
 
-                input {
-                    background: transparent;
-                    border: 0;
-                    padding: 2.0em 29px 0.3em 31px;
-                    border-bottom: 1px solid #cdd7e3;
-                    width: 100%;
-                    color: #4a4a4a;
-                    margin: -30px;
-                    box-sizing: content-box;
-
-                    &:focus {
-                        outline: none;
-                        border-bottom-color: @brand-color;
-                    }
+            .back-from-sheet {
+                + h4, + input {
+                    padding: 8px 2px 8px 31px;
                 }
+            }
 
-                input[type=text], .Dropdown-button {
-                    border-color: #cdcdcd;
+            input {
+                font-size: 18px;
+                background: transparent;
+                border: 0;
+                border-bottom: 1px solid #cdd7e3;
+                color: #4a4a4a;
+                width: 100%;
+
+                &:focus {
+                    outline: none;
+                    border-bottom-color: @brand-color;
                 }
+            }
+
+            input[type=text], .Dropdown-button {
+                border-color: @hr-color;
             }
         }
         .back-from-sheet {
@@ -416,7 +402,8 @@
             opacity: 0;
             z-index: 2;
             &-active {
-                transition: all 100ms;
+                transition: all 500ms;
+                transition-timing-function: cubic-bezier(0.025, 1.125, 0.100, 0.970);
                 right: 0;
                 opacity: 1;
             }
@@ -433,7 +420,8 @@
             opacity: 1;
             z-index: 1;
             &-active {
-                transition: all 100ms;
+                transition: all 300ms;
+                transition-timing-function: cubic-bezier(0.805, 0.050, 0.955, 0.290);
                 right: -32px;
                 opacity: 0;
             }

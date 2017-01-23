@@ -248,21 +248,20 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             configurationStage = selectedStage;
         }
 
-        const globalConfigPanel = pipelineStore.pipeline && (<div className="editor-config-panel global" key={'globalConfig'+pipelineStore.pipeline.id}>
-            <div>
-                <h4 className="stage-name-edit">
+        const globalConfigPanel = pipelineStore.pipeline && (<div className="editor-config-panel global"
+            key={'globalConfig'+pipelineStore.pipeline.id}
+            title={<h4>
                     Pipeline Settings
-                </h4>
-                <AgentConfiguration key={'agent'+pipelineStore.pipeline.id} node={pipelineStore.pipeline} onChange={agent => (selectedStage && agent.type == 'none' ? delete pipelineStore.pipeline.agent : pipelineStore.pipeline.agent = agent) && this.pipelineUpdated()} />
-                <EnvironmentConfiguration key={'env'+pipelineStore.pipeline.id} node={pipelineStore.pipeline} onChange={e => this.pipelineUpdated()} />
-            </div>
+                </h4>}>
+            <AgentConfiguration key={'agent'+pipelineStore.pipeline.id} node={pipelineStore.pipeline} onChange={agent => (selectedStage && agent.type == 'none' ? delete pipelineStore.pipeline.agent : pipelineStore.pipeline.agent = agent) && this.pipelineUpdated()} />
+            <EnvironmentConfiguration key={'env'+pipelineStore.pipeline.id} node={pipelineStore.pipeline} onChange={e => this.pipelineUpdated()} />
         </div>);
 
         const stageConfigPanel = selectedStage && (<div className="editor-config-panel stage" key={'stageConfig'+selectedStage.id}
             onClose={e => this.graphSelectedStageChanged(null)}
-            title={<h4 className="stage-name-edit">
+            title={
                 <input defaultValue={title} onChange={e => (selectedStage.name = e.target.value) && this.pipelineUpdated()} />
-            </h4>}>
+            }>
             <EditorStepList steps={steps}
                         selectedStep={selectedStep}
                         onAddStepClick={() => this.openSelectStepDialog()}
@@ -275,14 +274,12 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             */}
         </div>);
 
-        const stepConfigPanel = selectedStep && (<div className="editor-config-panel step"
-            onClose={e => this.selectedStepChanged(null)}>
-            <div>
-                <EditorStepDetails step={selectedStep} key={steps.indexOf(selectedStep)}
-                    onDataChange={newValue => this.stepDataChanged(newValue)}
-                    onDeleteStepClick={step => this.deleteStep(step)}/>
-            </div>
-        </div>);
+        const stepConfigPanel = selectedStep && (<EditorStepDetails className="editor-config-panel step"
+                step={selectedStep} key={steps.indexOf(selectedStep)}
+                onDataChange={newValue => this.stepDataChanged(newValue)}
+                onDeleteStepClick={step => this.deleteStep(step)}
+                onClose={e => this.selectedStepChanged(null)}
+                title={<h4>{selectedStep.label}</h4>} />);
 
         const sheets = [];
         if (globalConfigPanel) sheets.push(globalConfigPanel);
@@ -303,7 +300,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                                          onCreateStage={(parentStage) => this.createStage(parentStage)}/>
                     }
                 </div>
-                <Sheets transitionDuration={150}>
+                <Sheets>
                 {sheets}
                 </Sheets>
                 {this.state.showSelectStep && <AddStepSelectionDialog

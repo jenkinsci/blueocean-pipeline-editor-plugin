@@ -37,6 +37,10 @@ export class EditorStepDetails extends Component {
         super(props);
     }
 
+    getTitle() {
+        return this.props.step.label;
+    }
+
     componentWillMount() {
         pipelineMetadataService.getStepListing(stepMetadata => {
             this.setState({stepMetadata: stepMetadata});
@@ -98,7 +102,6 @@ export class EditorStepDetails extends Component {
 
         return (
             <div className="editor-step-detail">
-                <h4 className="editor-step-detail-label">{step.label}</h4>
                 <StepEditor key={step.id} onChange={step => this.commitValue(step)} step={step} />
                 <div className="editor-button-bar">
                     <button className="btn-secondary editor-delete-btn" onClick={(e) => this.deleteStepClicked(e)}>Delete step</button>
