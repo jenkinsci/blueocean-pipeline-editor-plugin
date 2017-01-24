@@ -18,7 +18,7 @@
   "license": "MIT",
   "devDependencies": {
     "@jenkins-cd/eslint-config-jenkins": "0.0.2",
-    "@jenkins-cd/js-builder": "0.0.51",
+    "@jenkins-cd/js-builder": "0.0.50",
     "@jenkins-cd/js-test": "1.2.3",
     "@kadira/storybook": "2.20.1",
     "babel": "6.5.2",
