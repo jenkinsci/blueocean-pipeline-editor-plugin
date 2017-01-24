@@ -618,6 +618,7 @@ needsLayout = true;
         const outerDivStyle = {
             position: "relative", // So we can put the labels where we need them
             overflow: "visible", // So long labels can escape this component in layout,
+            margin: '30px auto', // need to center here, justify-content: center cuts it off
             //height: (measuredHeight + 80) + "px"
         };
 
