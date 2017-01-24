@@ -109,7 +109,8 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
     graphSelectedStageChanged(newSelectedStage:?StageInfo) {
         this.setState({
             selectedStage: newSelectedStage,
-            selectedStep: null
+            selectedStep: null,
+            showSelectStep: false,
         });
     }
 
@@ -118,7 +119,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
     }
 
     selectedStepChanged(selectedStep:StepInfo) {
-        this.setState({selectedStep});
+        this.setState({selectedStep, showSelectStep: false});
     }
 
     stepDataChanged(newStep:any) {
@@ -248,19 +249,5 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                 </Sheets>
             </div>
         );
-    }
-}
-
-class SheetTest extends React.Component {
-    getTitle() {
-        return 'Sheet Test';
-    }
-
-    onClose() {
-        this.props.onClose();
-    }
-
-    render() {
-        return <div>Some sheet</div>;
     }
 }

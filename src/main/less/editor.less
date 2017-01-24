@@ -41,6 +41,22 @@
     padding: 4px 2px 4px 28px;
     width: 100%;
     background: @hr-color;
+    position: relative;
+
+    &.arrow-up:before {
+        content: '';
+        display: inline-block;
+        position: absolute;
+        border: 8px solid #cdcdcd;
+        border-left-color: transparent;
+        width: 0;
+        height: 0;
+        border-right-color: transparent;
+        border-top: 0;
+        left: 8px;
+        bottom: 0px;
+    }
+
 }
 
 //--[ Outer Editor Component ]------------------------------------------------------------------------------------------
