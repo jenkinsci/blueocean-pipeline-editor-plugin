@@ -10,7 +10,7 @@
 @top-bg: #fff;
 @brand-color: #4a90e2;
 @warning-color: #D24146;
-@error-highlight: #D24146;
+@error-highlight: @warning-color;//#d82b3f;
 
 @font-family-monospace:   "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 @font-family-header: "LatoLatinWebMedium", "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -205,25 +205,70 @@
     stroke: @brand-grey-lite;
 }
 
+.editor-graph-nodegroup .editor-graph-node {
+    fill: #fff;
+}
+
+.editor-graph-nodegroup.selected .editor-graph-node {
+    stroke: @brand-color;
+}
+
+.pipeline-selection-highlight circle {
+    fill: @brand-color;
+    stroke: @brand-color;
+}
+
 .editor-graph-nodegroup.errors .editor-graph-node {
     stroke: @error-highlight;
 }
 
-.editor-graph-nodegroup.selected .editor-graph-node {
-    stroke: #fff; //@brand-grey-lite;
-    fill: @brand-grey-lite;
-}
-
-.pipeline-selection-highlight.errors circle {
+.editor-graph-nodegroup.selected.errors .editor-graph-node {
     stroke: @error-highlight;
 }
 
-.pipeline-big-label.errors {
+.editor-graph-nodegroup.errors line {
+    stroke: @error-highlight;
+}
+
+.editor-graph-nodegroup.selected.errors line {
+    stroke: #fff;
+}
+
+.editor-graph-nodegroup.errors text {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: monospace;
+    fill: @error-highlight;
+}
+
+.pipeline-selection-highlight.errors circle {
+    fill: @error-highlight;
+    stroke: @error-highlight;
+}
+
+.pipeline-connector.placeholder {
+    stroke: #eae9e9;
+}
+
+.pipeline-big-label.errors, .pipeline-small-label.errors {
     color: @error-highlight;
 }
 
 .editor-add-node-placeholder {
     fill: @brand-color;
+}
+
+.result-status-glyph polygon {
+    fill: #cbcbcb;
+}
+
+.editor-add-node-placeholder {
+    fill: #fff;
+    stroke: #cbcbcb;
+}
+
+.start-node {
+    fill: #cdcdcd;
 }
 
 //--[ Steps List ]------------------------------------------------------------------------------------------------------
@@ -632,6 +677,8 @@ textarea.editor-step-detail-script {
     background: #fff4f4;
     padding: 16px;
     border-radius: 3px;
+    border: 1px solid #da8080;
+    margin-top: 10px;
 }
 
 .editor-text-area textarea {
