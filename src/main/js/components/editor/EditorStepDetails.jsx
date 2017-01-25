@@ -5,6 +5,8 @@ import pipelineMetadataService from '../../services/PipelineMetadataService';
 import type { StepInfo } from '../../services/PipelineStore';
 import GenericStepEditor from './steps/GenericStepEditor';
 import UnknownStepEditor from './steps/UnknownStepEditor';
+import { EditorStepList } from './EditorStepList';
+import { ValidationMessageList } from './ValidationMessageList';
 
 const allStepEditors = [
     require('./steps/ShellScriptStepEditor').default,
@@ -58,6 +60,14 @@ export class EditorStepDetails extends Component {
         }
     }
 
+    getStepMetadata(step) {
+        const meta = this.state.stepMetadata.filter(md => md.functionName === step.name);
+        if (meta && meta.length) {
+            return meta[0];
+        }
+        return null;
+    }
+
     getStepEditor(step) {
         const editor = stepEditorsByName[step.name];
         if (editor) {
@@ -67,8 +77,7 @@ export class EditorStepDetails extends Component {
             return null;
         }
 
-        const foundMeta = this.state.stepMetadata.filter(md => md.functionName === step.name);
-        if (foundMeta.length === 0) {
+        if (!this.getStepMetadata(step)) {
             return UnknownStepEditor;
         }
         return GenericStepEditor;
@@ -90,7 +99,12 @@ export class EditorStepDetails extends Component {
 
         return (
             <div className="editor-step-detail">
+                <ValidationMessageList node={step} />
                 <StepEditor key={step.id} onChange={step => this.commitValue(step)} step={step} />
+                {step.isContainer && <EditorStepList steps={step.children}
+                    selectedStep={null}
+                    onAddStepClick={() => this.props.openSelectStepDialog(step)}
+                    onStepSelected={(step) => this.props.selectedStepChanged(step)} />}
             </div>
         );
     }

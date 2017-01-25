@@ -51,12 +51,12 @@ export class PipelineValidator {
      * Gets the validation errors for the specific node
      */
     getNodeValidationErrors(node: Object, visited: any[] = []): Object[] {
-        const validationErrors = node.validationErrors ? [ node.validationErrors ] : [];
+        const validationErrors = node.validationErrors ? [ ...node.validationErrors ] : [];
         
         // if this is a parallel, check the parent stage for errors
         const parent = pipelineStore.findParentStage(node);
         if (parent && pipelineStore.pipeline !== parent && parent.validationErrors) {
-            validationErrors.push(parent.validationErrors);
+            validationErrors.push.apply(validationErrors, parent.validationErrors);
         }
 
         return validationErrors.length ? validationErrors : null;
@@ -72,7 +72,7 @@ export class PipelineValidator {
         visited.push(node);
         const validationErrors = [];
         if (node.validationErrors) {
-            validationErrors.push(node.validationErrors);
+            validationErrors.push.apply(validationErrors, node.validationErrors);
         }
         for (const key of Object.keys(node)) {
             const val = node[key];
@@ -83,7 +83,7 @@ export class PipelineValidator {
                 }
             }
         }
-        return validationErrors.length > 0 ? validationErrors : null;
+        return validationErrors.length ? validationErrors : null;
     }
 
     findNodeFromPath(pipeline: PipelineInfo, path: string[]): any {
@@ -146,7 +146,11 @@ export class PipelineValidator {
             for (const error of validation.errors) {
                 const node = this.findNodeFromPath(pipeline, error.location);
                 if (node) {
-                    node.validationErrors = error.error;
+                    if (!node.validationErrors) {
+                        node.validationErrors = [ error.error ];
+                    } else {
+                        node.validationErrors.push(error.error);
+                    }
                 }
             }
         }

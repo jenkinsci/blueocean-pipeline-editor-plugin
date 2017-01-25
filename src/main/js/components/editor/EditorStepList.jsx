@@ -51,10 +51,10 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
     }
 
     renderStep(step:StepInfo, selectedStep:?StepInfo, isChild: boolean = false) {
-        const hasErrors = pipelineValidator.hasValidationErrors(step);
-        let classNames = ["editor-step"];
+        const classNames = ["editor-step"];
 
-        if (hasErrors) {
+        const errors = pipelineValidator.getNodeValidationErrors(step);
+        if (errors) {
             classNames.push('errors');
         }
 
@@ -72,7 +72,7 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
             );
         }
 
-        const addStepButton = (step.isContainer) ? (
+        const addStepButton = false && (step.isContainer) ? (
             <div className="editor-button-bar">
                 <button className="btn-primary add"
                         onClick={(e) => this.addChildStepClicked(step, e)}>
@@ -99,15 +99,15 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
                         </div>}
                         <div className="editor-step-title">
                             <span className="editor-step-label">{step.label}</span>
-                            {!hasErrors && <span className="editor-step-summary">
+                            {!errors && <span className="editor-step-summary">
                                 {thisMeta.parameters.filter(p => p.isRequired).map(p =>
-                                    step.data[p.name]
+                                    <span>{step.data[p.name]} </span>
                                 )}
                                 </span>
                             }
-                            {hasErrors && <span className="editor-step-errors">
-                                {pipelineValidator.getAllValidationErrors(step).map(err =>
-                                    <span>{err.error ? err.error : err}<br/></span>
+                            {errors && <span className="editor-step-errors">
+                                {errors.map(err =>
+                                    <div>{err.error ? err.error : err}</div>
                                 )}
                                 </span>
                             }

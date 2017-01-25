@@ -5,7 +5,7 @@ export default class ListPropertyInput extends React.Component {
     render() {
         return (
             <div>
-                <label className="form-label">{this.props.type.capitalizedName}</label>
+                <label className="form-label">{this.props.type.capitalizedName + (this.props.type.isRequired ? '*' : '')}</label>
                 <div>This property type is not supported</div>
             </div>
         );

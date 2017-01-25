@@ -50,15 +50,18 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
             pipelineMetadataService.getStepListing(steps => {
                 existingPipeline = convertJsonToInternalModel(JSON.parse(existingPipeline));
                 pipelineStore.setPipeline(existingPipeline);
+                this.validatePipeline();
             });
         } else {
             this.newPipeline();
         }
         pipelineStore.addListener(this.pipelineUpdated = p => this.savePipelineState());
+        document.addEventListener('blur', this.validationListener = e => this.validatePipeline(), true);
     }
 
     componentWillUnmount() {
         pipelineStore.removeListener(this.pipelineUpdated);
+        document.removeEventListener('blur', this.validationListener);
     }
 
     savePipelineState() {
@@ -134,7 +137,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
         pipelineValidator.validatePipeline(pipelineStore.pipeline, validationResult => {
             console.log(validationResult);
             pipelineValidator.applyValidationMarkers(pipelineStore.pipeline, validationResult);
-            this.forceUpdate(); // redraw stuff with/without errors
+            pipelineStore.setPipeline(pipelineStore.pipeline); // notify listeners to re-render
         });
     }
 
@@ -150,7 +153,6 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                         {false && <button disabled={this.currentHistoryIndex <= 0} className="btn-secondary inverse" onClick={() => this.undo()}>Undo</button>}
                         <button className="btn-secondary inverse" onClick={() => this.newPipeline()}>New</button>
                         <button className="btn inverse" onClick={() => this.showPipelineScriptDialog()}>Load/Save</button>
-                        <button className="btn inverse" onClick={() => this.validatePipeline()}>Validate</button>
                     </div>
                 </div>
                 {this.props.children}

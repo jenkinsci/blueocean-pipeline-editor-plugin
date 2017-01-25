@@ -14,6 +14,7 @@ import { Sheets } from '../Sheets';
 import { MoreMenu } from '../MoreMenu';
 import { Icon } from "@jenkins-cd/react-material-icons";
 import pipelineValidator from '../../services/PipelineValidator';
+import { ValidationMessageList } from './ValidationMessageList';
 
 type Props = {
 };
@@ -21,6 +22,7 @@ type Props = {
 type State = {
     selectedStage: ?StageInfo,
     selectedStep: ?StepInfo,
+    selectedSteps: StepInfo[],
     showSelectStep: ?boolean,
     parentStep: ?StepInfo,
 };
@@ -74,7 +76,8 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             : pipelineStore.createSequentialStage('');
         this.setState({
             selectedStage: newStage,
-            selectedStep: null
+            selectedStep: null,
+            selectedSteps: [],
         }, e => {
             setTimeout(() => {
                 document.querySelector('.stage-name-edit').focus();
@@ -176,6 +179,14 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         }
     }
 
+    validatePipeline() {
+        pipelineValidator.validatePipeline(pipelineStore.pipeline, validationResult => {
+            console.log(validationResult);
+            pipelineValidator.applyValidationMarkers(pipelineStore.pipeline, validationResult);
+            this.forceUpdate(); // redraw stuff with/without errors
+        });
+    }
+
     render() {
         const {selectedStage, selectedStep} = this.state;
         const steps = selectedStage ? selectedStage.steps : [];
@@ -199,7 +210,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         </ConfigPanel>);
 
         const stageConfigPanel = selectedStage && (<ConfigPanel className="editor-config-panel stage" key={'stageConfig'+selectedStage.id}
-            onClose={e => this.graphSelectedStageChanged(null)}
+            onClose={e => this.validatePipeline() || this.graphSelectedStageChanged(null)}
             title={
                 <div>
                     <input className="stage-name-edit" placeholder="Name your stage" defaultValue={title} 
@@ -209,11 +220,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                     </MoreMenu>
                 </div>
             }>
-            {pipelineValidator.getNodeValidationErrors(selectedStage) && <div className="pipeline-validation-errors">
-                {pipelineValidator.getNodeValidationErrors(selectedStage).map(err =>
-                    <div>{err.error ? err.error : err}</div>
-                )}
-            </div>}
+            <ValidationMessageList node={selectedStage} />
             <EditorStepList steps={steps}
                         selectedStep={selectedStep}
                         onAddStepClick={() => this.openSelectStepDialog()}
@@ -228,9 +235,11 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         const stepConfigPanel = selectedStep && (<EditorStepDetails className="editor-config-panel step"
                 step={selectedStep} key={steps.indexOf(selectedStep)}
                 onDataChange={newValue => this.stepDataChanged(newValue)}
-                onClose={e => this.selectedStepChanged(null)}
+                onClose={e => this.validatePipeline() || this.selectedStepChanged(null)}
+                openSelectStepDialog={step => this.openSelectStepDialog(step)}
+                selectedStepChanged={step => this.selectedStepChanged(step)}
                 title={<h4>
-                    {selectedStage.name} / {selectedStep.label}
+                    {selectedStage && selectedStage.name} / {selectedStep.label}
                     <MoreMenu>
                         <a onClick={e => this.deleteStep(selectedStep)}>Delete</a>
                     </MoreMenu>
@@ -249,7 +258,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
 
         return (
             <div className="editor-main" key={pipelineStore.pipeline && pipelineStore.pipeline.id}>
-                <div className="editor-main-graph" onClick={e => this.setState({selectedStage: null, selectedStep: null})}>
+                <div className="editor-main-graph" onClick={e => this.validatePipeline() || this.setState({selectedStage: null, selectedStep: null})}>
                     {pipelineStore.pipeline &&
                     <EditorPipelineGraph stages={pipelineStore.pipeline.children}
                                          selectedStage={selectedStage}

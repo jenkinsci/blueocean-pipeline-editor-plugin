@@ -529,7 +529,7 @@ needsLayout = true;
     renderNode(node:NodeInfo) {
 
         const nodeIsSelected = this.nodeIsSelected(node);
-        const { nodeRadius, connectorStrokeWidth } = this.state.layout;
+        const { nodeRadius, dotRadius, connectorStrokeWidth } = this.state.layout;
 
         // Use a bigger radius for invisible click/touch target
         const mouseTargetRadius = nodeRadius + (2 * connectorStrokeWidth);
@@ -540,10 +540,6 @@ needsLayout = true;
         const groupChildren = [this.getSVGForNode(node)];
 
         const classNames = ["editor-graph-nodegroup"];
-        if (nodeIsSelected) {
-            classNames.push("selected");
-        }
-
         if (nodeHasErrors(node)) {
             classNames.push("errors");
             groupChildren.push(
@@ -583,6 +579,15 @@ needsLayout = true;
             */
         }
 
+        if (nodeIsSelected) {
+            classNames.push("selected");
+
+            // add a middle dot
+            groupChildren.push(
+                <circle className="pipeline-selection-highlight" r={dotRadius} strokeWidth={nodeStrokeWidth} />
+            );
+        }
+
         // Add an invisible click/touch target, coz the nodes are small and (more importantly)
         // many are hollow.
         groupChildren.push(
@@ -602,33 +607,6 @@ needsLayout = true;
         };
 
         return React.createElement("g", groupProps, ...groupChildren);
-    }
-
-    renderSelectionHighlight() {
-
-        const { dotRadius, connectorStrokeWidth } = this.state.layout;
-        const highlightRadius = dotRadius;
-        let selectedNode = null;
-
-        for (const node of this.state.nodes) {
-            if (this.nodeIsSelected(node)) {
-                selectedNode = node;
-                break;
-            }
-        }
-
-        if (!selectedNode) {
-            return null;
-        }
-
-        const transform = `translate(${selectedNode.x} ${selectedNode.y})`;
-        const classNames = nodeHasErrors(selectedNode) ? "pipeline-selection-highlight errors" : "pipeline-selection-highlight";
-
-        return (
-            <g className={classNames} transform={transform}>
-                <circle r={highlightRadius} strokeWidth={nodeStrokeWidth} />
-            </g>
-        );
     }
 
     nodeIsSelected(node:NodeInfo) {
@@ -704,7 +682,6 @@ needsLayout = true;
                     width={measuredWidth} height={measuredHeight}>
                     {connections.map(conn => this.renderConnection(conn))}
                     {nodes.map(node => this.renderNode(node))}
-                    {this.renderSelectionHighlight()}
                 </svg>
                 {bigLabels.map(label => this.renderBigLabel(label))}
                 {smallLabels.map(label => this.renderSmallLabel(label))}
