@@ -120,7 +120,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
 
     newPipeline() {
         pipelineStore.setPipeline({
-            agent: { isLiteral: true, value: 'any' },
+            agent: {type: "any"},
             children: [],
         });
     }
