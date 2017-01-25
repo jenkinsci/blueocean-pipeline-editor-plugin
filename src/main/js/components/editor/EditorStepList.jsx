@@ -5,6 +5,7 @@ import { getAddIconGroup, getGrabIconGroup } from './common';
 import pipelineMetadataService from '../../services/PipelineMetadataService';
 import type { StepInfo } from '../../services/PipelineStore';
 import { Icon } from "@jenkins-cd/react-material-icons";
+import pipelineValidator from '../../services/PipelineValidator';
 
 type Props = {
     steps: Array<StepInfo>,
@@ -50,8 +51,12 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
     }
 
     renderStep(step:StepInfo, selectedStep:?StepInfo, isChild: boolean = false) {
-
+        const hasErrors = pipelineValidator.hasValidationErrors(step);
         let classNames = ["editor-step"];
+
+        if (hasErrors) {
+            classNames.push('errors');
+        }
 
         if (step === selectedStep) {
             classNames.push("selected");
@@ -94,11 +99,18 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
                         </div>}
                         <div className="editor-step-title">
                             <span className="editor-step-label">{step.label}</span>
-                            <span className="editor-step-summary">
-                            {thisMeta.parameters.filter(p => p.isRequired).map(p =>
-                                step.data[p.name]
-                            )}
-                            </span>
+                            {!hasErrors && <span className="editor-step-summary">
+                                {thisMeta.parameters.filter(p => p.isRequired).map(p =>
+                                    step.data[p.name]
+                                )}
+                                </span>
+                            }
+                            {hasErrors && <span className="editor-step-errors">
+                                {pipelineValidator.getAllValidationErrors(step).map(err =>
+                                    <span>{err.error ? err.error : err}<br/></span>
+                                )}
+                                </span>
+                            }
                         </div>
                     </div>
 

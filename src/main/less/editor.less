@@ -9,7 +9,8 @@
 @brand-grey-lite: #949393;
 @top-bg: #fff;
 @brand-color: #4a90e2;
-@warning-color: #C4000A;
+@warning-color: #D24146;
+@error-highlight: #D24146;
 
 @font-family-monospace:   "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 @font-family-header: "LatoLatinWebMedium", "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -204,9 +205,21 @@
     stroke: @brand-grey-lite;
 }
 
+.editor-graph-nodegroup.errors .editor-graph-node {
+    stroke: @error-highlight;
+}
+
 .editor-graph-nodegroup.selected .editor-graph-node {
     stroke: #fff; //@brand-grey-lite;
     fill: @brand-grey-lite;
+}
+
+.pipeline-selection-highlight.errors circle {
+    stroke: @error-highlight;
+}
+
+.pipeline-big-label.errors {
+    color: @error-highlight;
 }
 
 .editor-add-node-placeholder {
@@ -232,6 +245,28 @@
     width: 100%;
     display: flex;
     background: @editor-background;
+    position: relative;
+
+    &.errors {
+        .editor-step-content:after {
+            border: 1px solid @error-highlight;
+            position: absolute;
+            content: '';
+            top: -1px; // cover the bottom border from above
+            right: 0;
+            bottom: 0;
+            left: 0;
+            cursor: pointer;
+        }
+
+        &:first-child .editor-step-content:after {
+            top: 0;
+        }
+    }
+}
+
+.editor-step-errors {
+    color: @error-highlight;
 }
 
 .editor-step-grab {
@@ -591,7 +626,7 @@ textarea.editor-step-detail-script {
     }
 }
 
-.editor-pipeline-dialog .errors .error {
+.pipeline-validation-errors > div {
     margin: -1em 0 1.2em 0;
     color: #c00;
     background: #fff4f4;

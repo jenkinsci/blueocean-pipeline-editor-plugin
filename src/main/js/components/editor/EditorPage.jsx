@@ -7,6 +7,7 @@ import { convertInternalModelToJson, convertJsonToPipeline, convertPipelineToJso
 import type { PipelineInfo } from '../../services/PipelineStore';
 import type { PipelineJsonContainer } from '../../services/PipelineSyntaxConverter';
 import pipelineMetadataService from '../../services/PipelineMetadataService';
+import pipelineValidator from '../../services/PipelineValidator';
 
 const PIPELINE_KEY = 'jenkins.pipeline.editor.workingCopy';
 
@@ -124,6 +125,14 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
         });
     }
 
+    validatePipeline() {
+        pipelineValidator.validatePipeline(pipelineStore.pipeline, validationResult => {
+            console.log(validationResult);
+            pipelineValidator.applyValidationMarkers(pipelineStore.pipeline, validationResult);
+            this.forceUpdate(); // redraw stuff with/without errors
+        });
+    }
+
     render() {
 
         let {title = "Create Pipeline", style} = this.props;
@@ -136,6 +145,7 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                         {false && <button disabled={this.currentHistoryIndex <= 0} className="btn-secondary inverse" onClick={() => this.undo()}>Undo</button>}
                         <button className="btn-secondary inverse" onClick={() => this.newPipeline()}>New</button>
                         <button className="btn inverse" onClick={() => this.showPipelineScriptDialog()}>Load/Save</button>
+                        <button className="btn inverse" onClick={() => this.validatePipeline()}>Validate</button>
                     </div>
                 </div>
                 {this.props.children}
@@ -144,8 +154,8 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                         title="Pipeline Script"
                         buttons={<div><button onClick={e => this.updateStateFromPipelineScript(this.refs.pipelineScript.value)}>Update</button></div>}>
                         {this.state.pipelineErrors &&
-                            <div className="errors">
-                                {this.state.pipelineErrors.map(err => <div className="error">{err.location && err.location.join('/')} {err.error}</div>)}
+                            <div className="pipeline-validation-errors">
+                                {this.state.pipelineErrors.map(err => <div>{err.location && err.location.join('/')} {err.error}</div>)}
                             </div>
                         }
                         <div className="editor-text-area">

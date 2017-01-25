@@ -13,6 +13,7 @@ import type { StageInfo, StepInfo } from '../../services/PipelineStore';
 import { Sheets } from '../Sheets';
 import { MoreMenu } from '../MoreMenu';
 import { Icon } from "@jenkins-cd/react-material-icons";
+import pipelineValidator from '../../services/PipelineValidator';
 
 type Props = {
 };
@@ -25,6 +26,13 @@ type State = {
 };
 
 type DefaultProps = typeof EditorMain.defaultProps;
+
+function ConfigPanel({className, children}) {
+    return (<div className={className}>
+        {children}
+    </div>);
+}
+
 export class EditorMain extends Component<DefaultProps, Props, State> {
 
     static defaultProps = {};
@@ -181,16 +189,16 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             configurationStage = selectedStage;
         }
 
-        const globalConfigPanel = pipelineStore.pipeline && (<div className="editor-config-panel global"
+        const globalConfigPanel = pipelineStore.pipeline && (<ConfigPanel className="editor-config-panel global"
             key={'globalConfig'+pipelineStore.pipeline.id}
             title={<h4>
                     Pipeline Settings
                 </h4>}>
             <AgentConfiguration key={'agent'+pipelineStore.pipeline.id} node={pipelineStore.pipeline} onChange={agent => (selectedStage && agent.type == 'none' ? delete pipelineStore.pipeline.agent : pipelineStore.pipeline.agent = agent) && this.pipelineUpdated()} />
             <EnvironmentConfiguration key={'env'+pipelineStore.pipeline.id} node={pipelineStore.pipeline} onChange={e => this.pipelineUpdated()} />
-        </div>);
+        </ConfigPanel>);
 
-        const stageConfigPanel = selectedStage && (<div className="editor-config-panel stage" key={'stageConfig'+selectedStage.id}
+        const stageConfigPanel = selectedStage && (<ConfigPanel className="editor-config-panel stage" key={'stageConfig'+selectedStage.id}
             onClose={e => this.graphSelectedStageChanged(null)}
             title={
                 <div>
@@ -201,6 +209,11 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
                     </MoreMenu>
                 </div>
             }>
+            {pipelineValidator.getNodeValidationErrors(selectedStage) && <div className="pipeline-validation-errors">
+                {pipelineValidator.getNodeValidationErrors(selectedStage).map(err =>
+                    <div>{err.error ? err.error : err}</div>
+                )}
+            </div>}
             <EditorStepList steps={steps}
                         selectedStep={selectedStep}
                         onAddStepClick={() => this.openSelectStepDialog()}
@@ -210,7 +223,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             <AgentConfiguration key={'agent'+configurationStage.id} node={configurationStage} onChange={agent => (selectedStage && agent.type == 'none' ? delete configurationStage.agent : configurationStage.agent = agent) && this.pipelineUpdated()} />
             <EnvironmentConfiguration key={'env'+configurationStage.id} node={configurationStage} onChange={e => this.pipelineUpdated()} />
             */}
-        </div>);
+        </ConfigPanel>);
 
         const stepConfigPanel = selectedStep && (<EditorStepDetails className="editor-config-panel step"
                 step={selectedStep} key={steps.indexOf(selectedStep)}

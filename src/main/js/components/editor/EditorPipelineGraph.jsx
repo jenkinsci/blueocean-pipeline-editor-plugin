@@ -4,6 +4,7 @@ import React, { Component, PropTypes } from 'react';
 
 import {getAddIconGroup} from './common';
 import type { StageInfo } from '../../services/PipelineStore';
+import pipelineValidator from '../../services/PipelineValidator';
 
 // Dimensions used for layout, px
 export const defaultLayout = {
@@ -85,6 +86,10 @@ type State = {
     measuredHeight: number,
     layout: LayoutInfo
 };
+
+function nodeHasErrors(graphNode) {
+    return graphNode.stage && pipelineValidator.hasValidationErrors(graphNode.stage);
+}
 
 type DefaultProps = typeof EditorPipelineGraph.defaultProps;
 export class EditorPipelineGraph extends Component<DefaultProps, Props, State> {
@@ -383,6 +388,9 @@ needsLayout = true;
             || (stage && this.stageChildIsSelected(stage))) {
             classNames.push("selected");
         }
+        if (nodeHasErrors(details.node)) {
+            classNames.push("errors");
+        }
 
         return <div className={classNames.join(" ")} style={style} key={key}>{details.text}</div>;
     }
@@ -420,6 +428,9 @@ needsLayout = true;
         const classNames = ["pipeline-small-label"];
         if (this.nodeIsSelected(details.node)) {
             classNames.push("selected");
+        }
+        if (nodeHasErrors(details.node)) {
+            classNames.push("errors");
         }
 
         return <div className={classNames.join(" ")} style={style} key={key}>{details.text}</div>;
@@ -523,11 +534,19 @@ needsLayout = true;
                     onClick={e => this.nodeClicked(node, e)}/>
         );
 
+        const classNames = ["editor-graph-nodegroup"];
+        if (nodeIsSelected) {
+            classNames.push("selected");
+        }
+        if (nodeHasErrors(node)) {
+            classNames.push("errors");
+        }
+
         // All the nodes are in shared code, so they're rendered at 0,0 so we transform within a <g>
         const groupProps = {
             key,
             transform: `translate(${node.x},${node.y})`,
-            className: nodeIsSelected ? "editor-graph-nodegroup selected" : "editor-graph-nodegroup"
+            className: classNames.join(' '),
         };
 
         return React.createElement("g", groupProps, ...groupChildren);
@@ -551,9 +570,10 @@ needsLayout = true;
         }
 
         const transform = `translate(${selectedNode.x} ${selectedNode.y})`;
+        const classNames = nodeHasErrors(selectedNode) ? "pipeline-selection-highlight errors" : "pipeline-selection-highlight";
 
         return (
-            <g className="pipeline-selection-highlight" transform={transform}>
+            <g className={classNames} transform={transform}>
                 <circle r={highlightRadius} strokeWidth={connectorStrokeWidth * 1.1}/>
             </g>
         );

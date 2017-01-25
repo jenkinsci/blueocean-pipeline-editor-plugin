@@ -10,6 +10,7 @@ const allPropertyEditors = [
     require('../../properties/IntegerPropertyInput').default,
     require('../../properties/DecimalPropertyInput').default,
     require('../../properties/StringPropertyInput').default,
+    require('../../properties/ListPropertyInput').default,
 ];
 
 const propertyEditorsByName = {
