@@ -119,10 +119,15 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
     }
 
     newPipeline() {
-        pipelineStore.setPipeline({
-            agent: {type: "any"},
-            children: [],
-        });
+        const newTemplate = require('./NewPipelineTemplate.json');
+        if (newTemplate) {
+            pipelineStore.setPipeline(convertJsonToInternalModel(newTemplate));
+        } else {
+            pipelineStore.setPipeline({
+                agent: {type: "any"},
+                children: [],
+            });
+        }
     }
 
     validatePipeline() {
