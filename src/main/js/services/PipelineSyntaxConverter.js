@@ -102,11 +102,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
 
     if (!pipeline.agent) {
         // we default agent to 'any'
-        out.agent = {
-            value: {
-                value: 'any',
-            },
-        };
+        out.agent = { type: 'any' };
     } else {
         out.agent = pipeline.agent;
     }
@@ -131,6 +127,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
         };
 
         // FIXME: this is per top-level stage, only...
+        topStageInfo.agent = topStage.agent;
         topStageInfo.environment = convertEnvironmentToInternal(topStage.environment);
 
         out.children.push(topStageInfo);
@@ -154,7 +151,7 @@ export function convertJsonToInternalModel(json: PipelineJsonContainer): Pipelin
                 topStageInfo.children.push(stage);
             }
 
-            captureUnknownSections(b, stage, 'name', 'steps', 'environment');
+            captureUnknownSections(b, stage, 'name', 'steps', 'environment', 'agent');
     
             for (let stepIndex = 0; stepIndex < b.steps.length; stepIndex++) {
                 const s = b.steps[stepIndex];
