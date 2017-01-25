@@ -189,8 +189,8 @@ class PipelineStore {
         return newStage;
     }
 
-    findParentStage(selectedStage: StageInfo) {
-        return findParentStage(this.pipeline, selectedStage);
+    findParentStage(stage: StageInfo) {
+        return findParentStage(this.pipeline, stage);
     }
 
     findStageByStep(step: StepInfo): ?StageInfo {

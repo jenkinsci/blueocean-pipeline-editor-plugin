@@ -1,7 +1,7 @@
 // @flow
 
 import fetch from './fetchClassic';
-import { UnknownSection } from './PipelineStore';
+import pipelineStore from './PipelineStore';
 import type { PipelineInfo, StageInfo, StepInfo } from './PipelineStore';
 import { convertInternalModelToJson } from './PipelineSyntaxConverter';
 import pipelineMetadataService from './PipelineMetadataService';
@@ -30,6 +30,12 @@ export class PipelineValidator {
         if (node.validationErrors) {
             return true;
         }
+        // if this is a parallel, check the parent stage for errors
+        const parent = pipelineStore.findParentStage(node);
+        if (parent && pipelineStore.pipeline !== parent && parent.validationErrors) {
+            return true;
+        }
+
         for (const key of Object.keys(node)) {
             const val = node[key];
             if (val instanceof Object) {
@@ -45,8 +51,15 @@ export class PipelineValidator {
      * Gets the validation errors for the specific node
      */
     getNodeValidationErrors(node: Object, visited: any[] = []): Object[] {
-        // FIXME, there may be an array or just one
-        return node.validationErrors ? [ node.validationErrors ] : null;
+        const validationErrors = node.validationErrors ? [ node.validationErrors ] : [];
+        
+        // if this is a parallel, check the parent stage for errors
+        const parent = pipelineStore.findParentStage(node);
+        if (parent && pipelineStore.pipeline !== parent && parent.validationErrors) {
+            validationErrors.push(parent.validationErrors);
+        }
+
+        return validationErrors.length ? validationErrors : null;
     }
 
     /**
