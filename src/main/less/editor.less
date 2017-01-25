@@ -731,10 +731,17 @@ ul.pipeline-validation-errors {
     &:hover, &:focus {
         background: transparent;
         border: 0;
+        box-shadow: none;
     }
 
-    &.add circle {
-        fill: #a5c8f1;
+    &.add {
+        circle {
+            fill: #a5c8f1;
+        }
+
+        .result-status-glyph polygon {
+            fill: #fff;
+        }
     }
 
     &.delete circle {
