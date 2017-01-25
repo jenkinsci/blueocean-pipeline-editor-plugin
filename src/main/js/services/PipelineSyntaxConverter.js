@@ -236,10 +236,13 @@ function _lit(value: any): PipelineValueDescriptor {
 function _convertStepArguments(step: StepInfo): PipelineNamedValueDescriptor[] {
     const out: PipelineNamedValueDescriptor[] = [];
     for (const arg of Object.keys(step.data)) {
-        out.push({
-            key: arg,
-            value: _lit(step.data[arg]),
-        });
+        const val = step.data[arg];
+        if (val) {
+            out.push({
+                key: arg,
+                value: _lit(val),
+            });
+        }
     }
     return out;
 }

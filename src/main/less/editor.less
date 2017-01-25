@@ -597,12 +597,10 @@ textarea.editor-step-detail-script {
         top: 50%;
         left: 3px;
         margin-top: -5px;
-        z-index: 1;
     }
     > input {
         width: 100%;
         padding: 22px 13px 8px 31px;
-        z-index: 2;
         position: relative;
         display: block;
         background: transparent;
@@ -673,11 +671,11 @@ textarea.editor-step-detail-script {
 
 .pipeline-validation-errors > div {
     margin: -1em 0 1.2em 0;
-    color: #c00;
+    color: @error-highlight;
     background: #fff4f4;
     padding: 16px;
     border-radius: 3px;
-    border: 1px solid #da8080;
+    border: 1px solid lighten(@error-highlight, 25%);
     margin-top: 10px;
 }
 
