@@ -160,10 +160,30 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                     <Dialog className="editor-pipeline-dialog" onDismiss={() => this.setState({showPipelineScript: false})}
                         title="Pipeline Script"
                         buttons={<div><button onClick={e => this.updateStateFromPipelineScript(this.refs.pipelineScript.value)}>Update</button></div>}>
-                        {this.state.pipelineErrors &&
-                            <div className="pipeline-validation-errors">
-                                {this.state.pipelineErrors.map(err => <div>{err.location && err.location.join('/')} {err.error}</div>)}
+                        {!localStorage.getItem('pipeline-editor-usage-blurb-accept') &&
+                        <div className="load-save-usage-blurb">
+                            Your current pipeline will automatically be converted to a&nbsp;
+                            <a target="_blank" href="https://github.com/jenkinsci/pipeline-config-plugin/wiki/Getting-Started">Pipeline Model
+                            Definiton</a> script when you open this dialog. To use it, just copy the script somewhere
+                            Jenkins can use, such as a&nbsp;
+                            <a target="_blank" href="https://jenkins-ci.org/content/pipeline-code-multibranch-workflows-jenkins">Jenkinsfile for a Multibranch project</a>.
+                            You may also paste a valid Pipeline
+                            Model Definition script below and click <em>Update</em> to load it in the editor.
+                            <div>
+                                <button className="btn-secondary" onClick={e => localStorage.setItem('pipeline-editor-usage-blurb-accept', true) || this.forceUpdate()}>Got it!</button>
                             </div>
+                        </div>
+                        }
+                        {this.state.pipelineErrors && !this.state.pipelineErrors[0].location &&
+                            <ul className="pipeline-validation-errors">
+                                {this.state.pipelineErrors.map(err => <li>{err.error}</li>)}
+                            </ul>
+                        }
+                        {this.state.pipelineErrors && this.state.pipelineErrors[0].location &&
+                            <ul className="pipeline-validation-errors">
+                                <li onClick={e => this.state.pipelineErrors.expand = true || this.forceUpdate()}>There were validation errors, please check the editor to correct them</li>
+                                {this.state.pipelineErrors.expand && this.state.pipelineErrors.map(err => <li>{err.error}</li>)}
+                            </ul>
                         }
                         <div className="editor-text-area">
                             <textarea ref="pipelineScript" style={{width: "100%", minHeight: "30em", height: "100%"}} defaultValue={this.state.pipelineScript}/>
