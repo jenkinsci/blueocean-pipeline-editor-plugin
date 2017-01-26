@@ -10,6 +10,7 @@ import { ValidationMessageList } from './ValidationMessageList';
 
 const allStepEditors = [
     require('./steps/ShellScriptStepEditor').default,
+    require('./steps/PipelineScriptStepEditor').default,
 ];
 
 const stepEditorsByName = {};
