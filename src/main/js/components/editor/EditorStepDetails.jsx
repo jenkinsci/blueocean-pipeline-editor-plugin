@@ -99,13 +99,18 @@ export class EditorStepDetails extends Component {
         const StepEditor = this.getStepEditor(step);
 
         return (
-            <div className="editor-step-detail">
-                <ValidationMessageList node={step} />
-                <StepEditor key={step.id} onChange={step => this.commitValue(step)} step={step} />
-                {step.isContainer && <EditorStepList steps={step.children}
-                    selectedStep={null}
-                    onAddStepClick={() => this.props.openSelectStepDialog(step)}
-                    onStepSelected={(step) => this.props.selectedStepChanged(step)} />}
+            <div className="editor-step-detail editor-config-panel">
+                <section>
+                    <ValidationMessageList node={step} />
+                    <StepEditor key={step.id} onChange={step => this.commitValue(step)} step={step} />
+                </section>
+                <section>
+                    <h5>Child steps</h5>
+                    {step.isContainer && <EditorStepList steps={step.children}
+                        parent={step}
+                        onAddStepClick={() => this.props.openSelectStepDialog(step)}
+                        onStepSelected={(step) => this.props.selectedStepChanged(step)} />}
+                </section>
             </div>
         );
     }

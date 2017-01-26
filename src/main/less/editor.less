@@ -11,6 +11,7 @@
 @brand-color: #4a90e2;
 @warning-color: #D24146;
 @error-highlight: @warning-color;//#d82b3f;
+@light-blue-bg: #edf4fc; //#f5f9fd;
 
 @font-family-monospace:   "Source Code Pro", Menlo, Monaco, Consolas, "Courier New", monospace;
 @font-family-header: "LatoLatinWebMedium", "Lato", "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -342,12 +343,31 @@
     cursor: pointer;
     position: relative;
     border-bottom: 1px solid @hr-color;
+
+    &:hover, &:active, &:focus {
+        background: @light-blue-bg;
+    }
 }
 
 .editor-step .editor-step .editor-step-main { // nested steps
     border-right: 0;
+    position: relative;
+}
+
+.editor-step.nested .editor-step-main { // child steps
     border-left-width: 24px;
     position: relative;
+}
+
+.editor-steps > .editor-step.missing .editor-step-content { // top-level 'no children' step
+    cursor: default;
+    &:hover, &:active, &:focus {
+        background: #fff;
+    }
+}
+
+.editor-step-detail section + section {
+    margin-top: 16px;
 }
 
 .editor-step-label {
@@ -437,6 +457,10 @@ textarea.editor-step-detail-script {
     svg {
         fill: #fff;
     }
+}
+
+.editor-steps > .editor-step:first-child > .editor-step-main > div > .editor-step-child-icon {
+    margin-top: -8px;
 }
 
 .sheet-container {
@@ -563,7 +587,7 @@ textarea.editor-step-detail-script {
             color: #444;
 
             &:hover, &:focus, &:active {
-                background: rgba(73, 143, 226, 0.1);
+                background: @light-blue-bg;
                 text-decoration: none;
             }
         }
@@ -588,7 +612,7 @@ textarea.editor-step-detail-script {
         }
 
         &:hover, &:active, &:focus {
-            background: #f0f0f0;
+            background: @light-blue-bg;
         }
     }
 }
@@ -665,7 +689,7 @@ textarea.editor-step-detail-script {
 .load-save-usage-blurb {
     padding: 16px;
     margin: 0 0 30px 0;
-    background: #f5f9fd;
+    background: @light-blue-bg;
 
     > div {
         margin-top: 12px;
