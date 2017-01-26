@@ -6,14 +6,19 @@ import type { PipelineInfo, StageInfo, StepInfo } from './PipelineStore';
 import { convertInternalModelToJson } from './PipelineSyntaxConverter';
 import pipelineMetadataService from './PipelineMetadataService';
 import idgen from './IdGenerator';
+import debounce from 'lodash.debounce';
+
+const validationTimeout = 500;
 
 export class PipelineValidator {
+    lastPipelineValidated: string;
+
     validatePipeline(pipeline: PipelineInfo, handler: ValidationResult) {
         const json = convertInternalModelToJson(pipeline);
         fetch('/pipeline-model-converter/validateJson',
         'json=' + encodeURIComponent(JSON.stringify(json)), data => {
             if (!data.result && data.errors) {
-                console.log(data);
+                console.error(data);
             }
             handler(data);
         });
@@ -134,7 +139,7 @@ export class PipelineValidator {
             }
         }
         if (!node) {
-            console.log('unable to find node for', path, 'in', pipeline);
+            console.error('unable to find node for', path, 'in', pipeline);
         }
         return node;
     }
@@ -169,6 +174,32 @@ export class PipelineValidator {
             if (val instanceof Object) {
                 this.clearValidationMarkers(val, visited);
             }
+        }
+    }
+
+    validateNow() {
+        const pipeline = pipelineStore.pipeline;
+        const json = JSON.stringify(convertInternalModelToJson(pipeline));
+        this.lastPipelineValidated = json;
+        this.validatePipeline(pipeline, validationResult => {
+            this.applyValidationMarkers(pipeline, validationResult);
+            pipelineStore.setPipeline(pipeline); // notify listeners to re-render
+        });
+    }
+
+    delayedValidate = debounce(() => {
+        this.validateNow();
+    }, validationTimeout);
+
+    validate() {
+        const json = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
+        if (this.lastPipelineValidated === json) {
+            return;
+        }
+        if (!this.lastPipelineValidate) {
+            this.validateNow();
+        } else {
+            this.delayedValidate();
         }
     }
 }

@@ -320,7 +320,6 @@ class PipelineStore {
     }
 
     notify() {
-        console.log('current pipeline: ', this.pipeline);
         this.listeners.map(l => l());
     }
 

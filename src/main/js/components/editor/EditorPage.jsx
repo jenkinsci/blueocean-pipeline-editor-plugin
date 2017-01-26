@@ -50,18 +50,16 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
             pipelineMetadataService.getStepListing(steps => {
                 existingPipeline = convertJsonToInternalModel(JSON.parse(existingPipeline));
                 pipelineStore.setPipeline(existingPipeline);
-                this.validatePipeline();
+                pipelineValidator.validate();
             });
         } else {
             this.newPipeline();
         }
         pipelineStore.addListener(this.pipelineUpdated = p => this.savePipelineState());
-        document.addEventListener('blur', this.validationListener = e => this.validatePipeline(), true);
     }
 
     componentWillUnmount() {
         pipelineStore.removeListener(this.pipelineUpdated);
-        document.removeEventListener('blur', this.validationListener);
     }
 
     savePipelineState() {
@@ -131,14 +129,6 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                 children: [],
             });
         }
-    }
-
-    validatePipeline() {
-        pipelineValidator.validatePipeline(pipelineStore.pipeline, validationResult => {
-            console.log(validationResult);
-            pipelineValidator.applyValidationMarkers(pipelineStore.pipeline, validationResult);
-            pipelineStore.setPipeline(pipelineStore.pipeline); // notify listeners to re-render
-        });
     }
 
     render() {

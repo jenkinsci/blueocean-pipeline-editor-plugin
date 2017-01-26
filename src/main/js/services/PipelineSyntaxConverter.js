@@ -331,7 +331,7 @@ export function convertPipelineToJson(pipeline: string, handler: Function) {
         fetch('/pipeline-model-converter/toJson',
             'jenkinsfile=' + encodeURIComponent(pipeline), data => {
                 if (data.errors) {
-                    console.log(data);
+                    console.error(data);
                 }
                 handler(data.json, data.errors);
             });
@@ -343,7 +343,7 @@ export function convertJsonToPipeline(json: string, handler: Function) {
         fetch('/pipeline-model-converter/toJenkinsfile',
             'json=' + encodeURIComponent(json), data => {
                 if (data.errors) {
-                    console.log(data);
+                    console.error(data);
                 }
                 handler(data.jenkinsfile, data.errors);
             });
@@ -355,7 +355,7 @@ export function convertPipelineStepsToJson(pipeline: string, handler: Function) 
         fetch('/pipeline-model-converter/stepsToJson',
             'jenkinsfile=' + encodeURIComponent(pipeline), data => {
                 if (data.errors) {
-                    console.log(data);
+                    console.error(data);
                 }
                 handler(data.json, data.errors);
             });
@@ -367,7 +367,7 @@ export function convertJsonStepsToPipeline(step: PipelineStep, handler: Function
         fetch('/pipeline-model-converter/stepsToJenkinsfile',
             'json=' + encodeURIComponent(JSON.stringify(step)), data => {
                 if (data.errors) {
-                    console.log(data);
+                    console.error(data);
                 }
                 handler(data.jenkinsfile, data.errors);
             });

@@ -73,7 +73,7 @@ export class EditorStepList extends Component<DefaultProps, Props, State> {
             }
         }
         
-        return steps.map(step => this.renderStep(step, parent));;
+        return steps.map(step => this.renderStep(step, parent));
     }
 
     renderStep(step:StepInfo, parent: StepInfo) {

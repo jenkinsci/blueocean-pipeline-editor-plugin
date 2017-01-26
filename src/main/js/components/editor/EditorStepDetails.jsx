@@ -104,13 +104,13 @@ export class EditorStepDetails extends Component {
                     <ValidationMessageList node={step} />
                     <StepEditor key={step.id} onChange={step => this.commitValue(step)} step={step} />
                 </section>
-                <section>
+                {step.isContainer && <section>
                     <h5>Child steps</h5>
-                    {step.isContainer && <EditorStepList steps={step.children}
+                    <EditorStepList steps={step.children}
                         parent={step}
                         onAddStepClick={() => this.props.openSelectStepDialog(step)}
-                        onStepSelected={(step) => this.props.selectedStepChanged(step)} />}
-                </section>
+                        onStepSelected={(step) => this.props.selectedStepChanged(step)} />
+                </section>}
             </div>
         );
     }

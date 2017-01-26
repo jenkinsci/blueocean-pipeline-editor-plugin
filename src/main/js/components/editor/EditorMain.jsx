@@ -115,15 +115,21 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         const newStep = pipelineStore.addStep(this.state.selectedStage, this.state.parentStep, step);
         selectedSteps.push(newStep);
         this.setState({showSelectStep: false, selectedSteps}, e => {
-            setTimeout(() => {
-                document.querySelector('.sheet:last-child .editor-step-detail input,.sheet:last-child .editor-step-detail textarea').focus();
-            }, 200);
+            const focusFirstField = () => {
+                try {
+                    document.querySelector('.sheet:last-child .editor-step-detail input,.sheet:last-child .editor-step-detail textarea').focus();
+                } catch(e) {
+                    setTimeout(focusFirstField, 500);
+                }
+            };
+            setTimeout(focusFirstField, 200);
         });
     }
 
     deleteStep(step: any) {
+        const { selectedSteps } = this.state;
         pipelineStore.deleteStep(step);
-        this.state.selectedSteps.pop(); // FIXME
+        selectedSteps.pop(); // FIXME
         this.setState({selectedSteps});
     }
 
@@ -135,14 +141,6 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         if (selectedStage) {
             pipelineStore.deleteStage(selectedStage);
         }
-    }
-
-    validatePipeline() {
-        pipelineValidator.validatePipeline(pipelineStore.pipeline, validationResult => {
-            console.log(validationResult);
-            pipelineValidator.applyValidationMarkers(pipelineStore.pipeline, validationResult);
-            this.forceUpdate(); // redraw stuff with/without errors
-        });
     }
 
     render() {
@@ -171,7 +169,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         if (globalConfigPanel) sheets.push(globalConfigPanel);
 
         const stageConfigPanel = selectedStage && (<ConfigPanel className="editor-config-panel stage" key={'stageConfig'+selectedStage.id}
-            onClose={e => this.validatePipeline() || this.graphSelectedStageChanged(null)}
+            onClose={e => pipelineValidator.validate() || this.graphSelectedStageChanged(null)}
             title={
                 <div>
                     <input className="stage-name-edit" placeholder="Name your stage" defaultValue={title} 
@@ -199,7 +197,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             const stepConfigPanel = (<EditorStepDetails className="editor-config-panel step"
                     step={step} key={steps.indexOf(step)}
                     onDataChange={newValue => this.stepDataChanged(newValue)}
-                    onClose={e => this.validatePipeline() || this.selectedStepChanged(null, parentStep)}
+                    onClose={e => pipelineValidator.validate() || this.selectedStepChanged(null, parentStep)}
                     openSelectStepDialog={step => this.openSelectStepDialog(step)}
                     selectedStepChanged={step => this.selectedStepChanged(step, parentStep)}
                     title={<h4>
@@ -222,7 +220,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
 
         return (
             <div className="editor-main" key={pipelineStore.pipeline && pipelineStore.pipeline.id}>
-                <div className="editor-main-graph" onClick={e => this.validatePipeline() || this.setState({selectedStage: null, selectedSteps: []})}>
+                <div className="editor-main-graph" onClick={e => pipelineValidator.validate() || this.setState({selectedStage: null, selectedSteps: []})}>
                     {pipelineStore.pipeline &&
                     <EditorPipelineGraph stages={pipelineStore.pipeline.children}
                                          selectedStage={selectedStage}

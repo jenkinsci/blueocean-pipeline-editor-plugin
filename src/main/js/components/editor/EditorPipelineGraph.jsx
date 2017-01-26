@@ -672,10 +672,6 @@ needsLayout = true;
             //height: (measuredHeight + 80) + "px"
         };
 
-        //console.log("render graph"); // TODO: RM
-        //console.log("    this.selectedStage", this.selectedStage); // TODO: RM
-        //console.log("   props.selectedStage", this.props.selectedStage); // TODO: RM
-
         return (
             <div style={outerDivStyle}>
                 <svg className="editor-graph-svg"
