@@ -195,7 +195,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
         let parentStep = null;
         for (const step of selectedSteps) {
             const stepConfigPanel = (<EditorStepDetails className="editor-config-panel step"
-                    step={step} key={steps.indexOf(step)}
+                    step={step} key={step.id}
                     onDataChange={newValue => this.stepDataChanged(newValue)}
                     onClose={e => pipelineValidator.validate() || this.selectedStepChanged(null, parentStep)}
                     openSelectStepDialog={step => this.openSelectStepDialog(step)}
