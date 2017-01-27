@@ -72,6 +72,7 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
         if (!emptyEntry) {
             node.environment.push({
                 key: '',
+                isNew: true,
                 id: idgen.next(),
                 value: {
                     isLiteral: true,
@@ -103,9 +104,11 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
                 <button onClick={e => this.addEnvironmentEntry()} title="Add"  className="environment-add-delete-icon add">{addIcon()}</button>
             </Split>
             {node.environment && node.environment.map((env, idx) => <div className="environment-entry" key={env.id}>
-                <Split className={!isValidEnvironmentKey(env.key) && 'u-error-state'}>
+                <Split className={!env.isNew && !isValidEnvironmentKey(env.key) && 'u-error-state'}>
                     <div className="FormElement-children">
-                        <TextInput defaultValue={env.key} onChange={val => { env.key = val; this.props.onChange(); }} />
+                        <div className="TextInput">
+                            <input type="text" className="TextInput-control" defaultValue={env.key} onChange={e => { const val = e.target.value; env.key = val; delete env.isNew ; this.props.onChange(); }} onBlur={e => { delete env.isNew && this.forceUpdate(); }} />
+                        </div>
                     </div>
                     <TextInput defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
                     <button onClick={e => { this.removeEnviromentEntry(env, idx); this.props.onChange(); }} title="Remove"  className="environment-add-delete-icon delete">{deleteIcon()}</button>
