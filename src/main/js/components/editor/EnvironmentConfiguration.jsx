@@ -17,7 +17,7 @@ type Props = {
 };
 
 type State = {
-    isNew: ?boolean,
+    pristine: ?any,
 };
 
 type DefaultProps = typeof EnvironmentConfiguration.defaultProps;
@@ -72,15 +72,16 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
         // check for empty entries and just focus on them
         const emptyEntry = node.environment.filter(e => !e.key)[0];
         if (!emptyEntry) {
-            node.environment.push({
+            const envEntry = {
                 key: '',
                 id: idgen.next(),
                 value: {
                     isLiteral: true,
                     value: '',
                 }
-            });
-            this.setState({ isNew: true });
+            };
+            node.environment.push(envEntry);
+            this.setState({ pristine: envEntry.id });
             this.props.onChange();
         }
         focusOnElement('.environment-entry:last-child .split-child:first-child input');
@@ -93,7 +94,7 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
 
     render() {
         const { node } = this.props;
-        const { isNew } = this.state;
+        const { pristine } = this.state;
 
         if (!node) {
             return null;
@@ -108,9 +109,9 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
             </Split>
             {node.environment && node.environment.map((env, idx) => <div className="environment-entry" key={env.id}>
                 <Split>
-                    <InputText hasError={!isNew && !isValidEnvironmentKey(env.key)}
-                        defaultValue={env.key} onChange={val => { env.key = val; this.setState({ isNew: false }); this.props.onChange(); }}
-                        onBlur={e => this.setState({ isNew: false })} />
+                    <InputText hasError={pristine !== env.id && !isValidEnvironmentKey(env.key)}
+                        defaultValue={env.key} onChange={val => { env.key = val; this.setState({ pristine: null }); this.props.onChange(); }}
+                        onBlur={e => this.setState({ pristine: null })} />
                     <TextInput defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
                     <button onClick={e => { this.removeEnviromentEntry(env, idx); this.props.onChange(); }} title="Remove"  className="environment-add-delete-icon delete">{deleteIcon()}</button>
                 </Split>
