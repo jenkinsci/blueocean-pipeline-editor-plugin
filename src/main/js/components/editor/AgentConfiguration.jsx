@@ -8,6 +8,7 @@ import { Dropdown, TextInput } from '@jenkins-cd/design-language';
 import { Split } from './Split';
 import focusOnElement from './focusOnElement';
 import InputText from './InputText';
+import { ValidationMessageList } from './ValidationMessageList';
 
 type Props = {
     node: PipelineInfo|StageInfo,
@@ -116,6 +117,7 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
 
         return (<div className="agent-select">
             <h5>Agent</h5>
+            <ValidationMessageList node={selectedAgent} />
             <Dropdown labelField="symbol" options={agents}
                 defaultOption={selectedAgentMetadata}
                 onChange={agent => this.onAgentChanged(agent)} />
