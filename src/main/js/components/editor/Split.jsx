@@ -7,7 +7,7 @@ export function Split({children, className}) {
         return null;
     }
     return (<div className="split">
-        {React.Children.map(children, child => <div className={`split-child FormElement ${className}`}>
+        {React.Children.map(children, child => <div className={`split-child ${className}`}>
             {child}
         </div>)}
     </div>);

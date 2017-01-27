@@ -104,7 +104,7 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
                 <button onClick={e => this.addEnvironmentEntry()} title="Add"  className="environment-add-delete-icon add">{addIcon()}</button>
             </Split>
             {node.environment && node.environment.map((env, idx) => <div className="environment-entry" key={env.id}>
-                <Split className={!env.isNew && !isValidEnvironmentKey(env.key) && 'u-error-state'}>
+                <Split className={`FormElement ${!env.isNew && !isValidEnvironmentKey(env.key) && 'u-error-state'}`}>
                     <div className="FormElement-children">
                         <div className="TextInput">
                             <input type="text" className="TextInput-control" defaultValue={env.key} onChange={e => { const val = e.target.value; env.key = val; delete env.isNew ; this.props.onChange(); }} onBlur={e => { delete env.isNew && this.forceUpdate(); }} />
