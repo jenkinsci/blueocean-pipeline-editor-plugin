@@ -9,6 +9,7 @@ import { Split } from './Split';
 import { TextInput } from '@jenkins-cd/design-language';
 import { getAddIconGroup, getDeleteIconGroup } from './common';
 import focusOnElement from './focusOnElement';
+import InputText from './InputText';
 
 type Props = {
     node: PipelineInfo|StageInfo,
@@ -16,6 +17,7 @@ type Props = {
 };
 
 type State = {
+    isNew: ?boolean,
 };
 
 type DefaultProps = typeof EnvironmentConfiguration.defaultProps;
@@ -72,13 +74,13 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
         if (!emptyEntry) {
             node.environment.push({
                 key: '',
-                isNew: true,
                 id: idgen.next(),
                 value: {
                     isLiteral: true,
                     value: '',
                 }
             });
+            this.setState({ isNew: true });
             this.props.onChange();
         }
         focusOnElement('.environment-entry:last-child .split-child:first-child input');
@@ -91,6 +93,7 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
 
     render() {
         const { node } = this.props;
+        const { isNew } = this.state;
 
         if (!node) {
             return null;
@@ -104,12 +107,10 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
                 <button onClick={e => this.addEnvironmentEntry()} title="Add"  className="environment-add-delete-icon add">{addIcon()}</button>
             </Split>
             {node.environment && node.environment.map((env, idx) => <div className="environment-entry" key={env.id}>
-                <Split className={`FormElement ${!env.isNew && !isValidEnvironmentKey(env.key) && 'u-error-state'}`}>
-                    <div className="FormElement-children">
-                        <div className="TextInput">
-                            <input type="text" className="TextInput-control" defaultValue={env.key} onChange={e => { const val = e.target.value; env.key = val; delete env.isNew ; this.props.onChange(); }} onBlur={e => { delete env.isNew && this.forceUpdate(); }} />
-                        </div>
-                    </div>
+                <Split>
+                    <InputText hasError={!isNew && !isValidEnvironmentKey(env.key)}
+                        defaultValue={env.key} onChange={val => { env.key = val; this.setState({ isNew: false }); this.props.onChange(); }}
+                        onBlur={e => this.setState({ isNew: false })} />
                     <TextInput defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
                     <button onClick={e => { this.removeEnviromentEntry(env, idx); this.props.onChange(); }} title="Remove"  className="environment-add-delete-icon delete">{deleteIcon()}</button>
                 </Split>
