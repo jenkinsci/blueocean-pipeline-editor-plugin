@@ -8,6 +8,7 @@ import { Dropdown } from '@jenkins-cd/design-language';
 import { Split } from './Split';
 import { TextInput } from '@jenkins-cd/design-language';
 import { getAddIconGroup, getDeleteIconGroup } from './common';
+import focusOnElement from './focusOnElement';
 
 type Props = {
     node: PipelineInfo|StageInfo,
@@ -36,6 +37,16 @@ function deleteIcon() {
     </svg>);
 }
 
+function isValidEnvironmentKey(key: string): boolean {
+    if (!key) {
+        return false;
+    }
+    if (/^[_$a-zA-Z\xA0-\uFFFF][_$a-zA-Z0-9\xA0-\uFFFF]*$/.test(key)) {
+        return true;
+    }
+    return false;
+}
+
 export class EnvironmentConfiguration extends Component<DefaultProps, Props, State> {
     props:Props;
     state:State;
@@ -52,18 +63,24 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
     }
 
     addEnvironmentEntry() {
-        if (!this.props.node.environment) {
-            this.props.node.environment = [];
+        const { node } = this.props;
+        if (!node.environment) {
+            node.environment = [];
         }
-        this.props.node.environment.push({
-            key: '',
-            id: idgen.next(),
-            value: {
-                isLiteral: true,
-                value: '',
-            }
-        });
-        this.props.onChange();
+        // check for empty entries and just focus on them
+        const emptyEntry = node.environment.filter(e => !e.key)[0];
+        if (!emptyEntry) {
+            node.environment.push({
+                key: '',
+                id: idgen.next(),
+                value: {
+                    isLiteral: true,
+                    value: '',
+                }
+            });
+            this.props.onChange();
+        }
+        focusOnElement('.environment-entry:last-child .split-child:first-child input');
     }
 
     removeEnviromentEntry(entry, idx) {
@@ -86,8 +103,10 @@ export class EnvironmentConfiguration extends Component<DefaultProps, Props, Sta
                 <button onClick={e => this.addEnvironmentEntry()} title="Add"  className="environment-add-delete-icon add">{addIcon()}</button>
             </Split>
             {node.environment && node.environment.map((env, idx) => <div className="environment-entry" key={env.id}>
-                <Split>
-                    <TextInput defaultValue={env.key} onChange={val => { env.key = val; this.props.onChange(); }} />
+                <Split className={!isValidEnvironmentKey(env.key) && 'u-error-state'}>
+                    <div className="FormElement-children">
+                        <TextInput defaultValue={env.key} onChange={val => { env.key = val; this.props.onChange(); }} />
+                    </div>
                     <TextInput defaultValue={env.value.value} onChange={val => { env.value.value = val; this.props.onChange(); }} />
                     <button onClick={e => { this.removeEnviromentEntry(env, idx); this.props.onChange(); }} title="Remove"  className="environment-add-delete-icon delete">{deleteIcon()}</button>
                 </Split>
