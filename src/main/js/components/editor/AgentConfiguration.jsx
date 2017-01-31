@@ -127,7 +127,7 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
                     const val = this.getRealOrEmptyArg(param.name).value.value;
                     return (<div className="agent-param">
                         <label key={selectedAgent.type + '/' + param.name}>
-                            <div>{param.capitalizedName} {param.isRequired?'*':''}</div>
+                            <div>{param.capitalizedName}{param.isRequired ? '*' : ''}</div>
                             <div>
                                 <InputText hasError={param.isRequired && !isNew && !val}
                                     isRequired={param.isRequired}
