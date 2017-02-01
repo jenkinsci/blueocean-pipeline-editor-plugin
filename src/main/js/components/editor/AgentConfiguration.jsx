@@ -23,6 +23,21 @@ type State = {
 
 type DefaultProps = typeof AgentConfiguration.defaultProps;
 
+function agentConfigParamFilter(agent) {
+    return (param) => {
+        switch(agent.type) {
+            case 'docker':
+                return ['image', 'args'].indexOf(param.name) >= 0;
+            case 'dockerfile':
+                return ['filename'].indexOf(param.name) >= 0;
+            case 'label':
+                return ['label'].indexOf(param.name) >= 0;
+            default:
+                return false;
+        }
+    };
+}
+
 export class AgentConfiguration extends Component<DefaultProps, Props, State> {
     props:Props;
     state:State;
@@ -123,7 +138,7 @@ export class AgentConfiguration extends Component<DefaultProps, Props, State> {
                 onChange={agent => this.onAgentChanged(agent)} />
             <Split>
             {selectedAgent && selectedAgentMetadata && <div className="agent-parameters">
-                {selectedAgentMetadata.parameters.map(param => {
+                {selectedAgentMetadata.parameters.filter(agentConfigParamFilter(selectedAgent)).map(param => {
                     const val = this.getRealOrEmptyArg(param.name).value.value;
                     return (<div className="agent-param">
                         <label key={selectedAgent.type + '/' + param.name}>
