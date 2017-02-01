@@ -195,10 +195,29 @@ export class PipelineValidator {
         }
     }
 
+    hasPristineEdits(node: Object, visited: any[] = []) {
+        if (visited.indexOf(node) >= 0) {
+            return false;
+        }
+        visited.push(node);
+        if (node.pristine) {
+            return true;
+        }
+        for (const key of Object.keys(node)) {
+            const val = node[key];
+            if (val instanceof Object) {
+                if(this.hasPristineEdits(val, visited)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     validateNow() {
         const pipeline = pipelineStore.pipeline;
         const json = JSON.stringify(convertInternalModelToJson(pipeline));
-        this.lastPipelineValidated = json;
+        this.lastPipelineValidated = json + (this.hasPristineEdits(pipeline) ? '.' : '');
         this.validatePipeline(pipeline, validationResult => {
             this.applyValidationMarkers(pipeline, validationResult);
             pipelineStore.setPipeline(pipeline); // notify listeners to re-render
