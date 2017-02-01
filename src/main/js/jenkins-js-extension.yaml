@@ -1,6 +1,6 @@
 # Extensions in this plugin
 extensions:
-  - component: PipelineEditorButton
+  - component: PipelineEditorLink
     extensionPoint: jenkins.blueocean.top.links
   - component: EditorRoutes
     extensionPoint: jenkins.main.routes
