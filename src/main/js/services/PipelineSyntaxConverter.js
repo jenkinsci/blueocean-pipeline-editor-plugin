@@ -283,7 +283,7 @@ export function convertStageToJson(stage: StageInfo): PipelineStage {
     // an agent for each parallel branch, with nested stages and/or execution
     // graph order, this will go away in favor of a different mechanism...
     if (stage.agent && stage.agent && stage.agent.type != 'none') {
-        out.agent = removeExtraMarkers(stage.agent)
+        out.agent = removeExtraMarkers(stage.agent);
     }
 
     if (stage.environment && stage.environment.length) {
