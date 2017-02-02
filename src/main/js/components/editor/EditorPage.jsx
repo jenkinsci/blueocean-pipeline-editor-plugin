@@ -100,6 +100,10 @@ export class EditorPage extends Component<DefaultProps, Props, State> {
                 pipelineStore.setPipeline(internal);
             } else {
                 this.setState({pipelineErrors: err});
+                if(err[0].location) {
+                    // revalidate in case something missed it (e.g. create an empty stage then load/save)
+                    pipelineValidator.validate();
+                }
             }
         });
     }
