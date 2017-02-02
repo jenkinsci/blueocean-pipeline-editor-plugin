@@ -108,6 +108,7 @@ export class EditorMain extends Component<DefaultProps, Props, State> {
             selectedSteps: [],
             showSelectStep: false,
         });
+        pipelineValidator.validate();
     }
 
     openSelectStepDialog(parentStep: ?StepInfo = null) {
