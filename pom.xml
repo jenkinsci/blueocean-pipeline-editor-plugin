@@ -11,8 +11,7 @@
 
     <name>Blue Ocean Pipeline Editor</name>
     <description>
-        The Blue Ocean Pipeline Editor is the simplest way for anyone 
-        wanting to get started with creating Pipelines in Jenkins
+        The Blue Ocean Pipeline Editor is the simplest way for anyone wanting to get started with creating Pipelines in Jenkins
     </description>
     
     <groupId>io.jenkins.blueocean</groupId>
