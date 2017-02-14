@@ -2,7 +2,7 @@
 
 import React, { Component, PropTypes } from 'react';
 import { Dialog } from '@jenkins-cd/design-language';
-import { i18nTranslator, ContentPageHeader, AppConfig } from '@jenkins-cd/blueocean-core-js';
+import { ContentPageHeader } from '@jenkins-cd/blueocean-core-js';
 import pipelineStore from '../../services/PipelineStore';
 import { convertInternalModelToJson, convertJsonToPipeline, convertPipelineToJson, convertJsonToInternalModel } from '../../services/PipelineSyntaxConverter';
 import type { PipelineInfo } from '../../services/PipelineStore';
