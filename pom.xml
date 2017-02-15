@@ -81,19 +81,14 @@
             <version>${blueocean.version}</version>
         </dependency>
         <dependency>
+            <groupId>io.jenkins.blueocean</groupId>
+            <artifactId>blueocean-pipeline-api-impl</artifactId>
+            <version>${blueocean.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.jenkinsci.plugins</groupId>
             <artifactId>pipeline-model-definition</artifactId>
             <version>${declarative.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-api</artifactId>
-            <version>2.6</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jenkins-ci.plugins.workflow</groupId>
-            <artifactId>workflow-cps</artifactId>
-            <version>2.23</version>
         </dependency>
 
         <!-- test deps for hpi:run -->
