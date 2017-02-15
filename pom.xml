@@ -81,6 +81,16 @@
             <version>${blueocean.version}</version>
         </dependency>
         <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-web</artifactId>
+            <version>${blueocean.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.jenkins.blueocean</groupId>
+            <artifactId>blueocean-commons</artifactId>
+            <version>${blueocean.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.jenkins.blueocean</groupId>
             <artifactId>blueocean-pipeline-api-impl</artifactId>
             <version>${blueocean.version}</version>
@@ -93,8 +103,56 @@
 
         <!-- test deps for hpi:run -->
         <dependency>
-            <groupId>io.jenkins.blueocean</groupId>
-            <artifactId>blueocean</artifactId>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-dashboard</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-personalization</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-i18n</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-jwt</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-rest-impl</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-pipeline-api-impl</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-config</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-github-pipeline</artifactId>
+            <version>${blueocean.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>${project.groupId}</groupId>
+            <artifactId>blueocean-git-pipeline</artifactId>
             <version>${blueocean.version}</version>
             <scope>test</scope>
         </dependency>
