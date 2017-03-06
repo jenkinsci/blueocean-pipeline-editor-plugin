@@ -48,11 +48,11 @@ class SaveDialog extends React.Component {
         
         const buttons = [
             <button className="btn-primary" onClick={() => this.save()} disabled={this.state.saving}>Save & run</button>,
-            <button className="btn-link btn-secondary" disabled={this.state.saving} onClick={() => cancel()}>Cancel</button>,
+            <button className="btn-link btn-secondary" disabled={this.state.saving} onClick={() => this.cancel()}>Cancel</button>,
         ];
         
         return (
-            <Dialog onDismiss={() => cancel()} title="Save Pipeline" buttons={buttons} className="save-pipeline-dialog">
+            <Dialog onDismiss={() => this.cancel()} title="Save Pipeline" buttons={buttons} className="save-pipeline-dialog">
                 <div>Saving the pipeline will commit a Jenkinsfile to the repository</div>
                 <FormElement title="Description">
                     <TextArea placeholder="What changed?" defaultValue="" width="100%" cols={2} disabled={this.state.saving}
