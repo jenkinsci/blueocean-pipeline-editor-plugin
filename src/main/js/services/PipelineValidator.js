@@ -214,13 +214,14 @@ export class PipelineValidator {
         return false;
     }
 
-    validateNow() {
+    validateNow(onComplete) {
         const pipeline = pipelineStore.pipeline;
         const json = JSON.stringify(convertInternalModelToJson(pipeline));
         this.lastPipelineValidated = json + (this.hasPristineEdits(pipeline) ? '.' : '');
         this.validatePipeline(pipeline, validationResult => {
             this.applyValidationMarkers(pipeline, validationResult);
             pipelineStore.setPipeline(pipeline); // notify listeners to re-render
+            if (onComplete) onComplete();
         });
     }
 
@@ -228,13 +229,14 @@ export class PipelineValidator {
         this.validateNow();
     }, validationTimeout);
 
-    validate() {
+    validate(onComplete) {
         const json = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
         if (this.lastPipelineValidated === json) {
+        	if (onComplete) onComplete();
             return;
         }
         if (!this.lastPipelineValidate) {
-            this.validateNow();
+            this.validateNow(onComplete);
         } else {
             this.delayedValidate();
         }
