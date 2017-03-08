@@ -4,12 +4,16 @@ import { action, computed, observable } from 'mobx';
 import { Fetch, Paths, sseService, loadingIndicator } from '@jenkins-cd/blueocean-core-js';
 
 export class SaveApi {
-    index(organization, folder, complete, progress) {
-        const cleanup = e => {
+    index(organization, folder, complete, onError, progress) {
+        const cleanup = err => {
             sseService.removeHandler(sseId);
             clearTimeout(timeoutId);
-            complete();
             loadingIndicator.hide();
+            if (err && onError) {
+                onError(err);
+            } else {
+                complete();
+            }
         };
         
         loadingIndicator.show();
@@ -22,13 +26,16 @@ export class SaveApi {
             if (event.job_multibranch_indexing_result === 'SUCCESS') {
                 if (progress) progress(event);
             }
-            if (event.job_orgfolder_indexing_result === 'FAILURE' || event.job_orgfolder_indexing_result === 'SUCCESS') {
+            if (event.job_orgfolder_indexing_result === 'SUCCESS') {
                 cleanup();
+            }
+            if (event.job_orgfolder_indexing_result === 'FAILURE') {
+                cleanup({ message: 'Indexing failed' });
             }
         });
 
         Fetch.fetchJSON(Paths.rest.apiRoot() + '/organizations/' + organization + '/pipelines/' + folder + '/runs/1/replay/', {
-        	fetchOptions: {
+            fetchOptions: {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -37,10 +44,10 @@ export class SaveApi {
             }
         })
         .then(data => {
-            console.log(data);
+            // Nothing to do here
         })
         .catch(err => {
-        	console.error(err);
+            cleanup(err);
         });
     }
 }

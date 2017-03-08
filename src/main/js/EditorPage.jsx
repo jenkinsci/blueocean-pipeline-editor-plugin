@@ -2,8 +2,8 @@ import React from 'react';
 import { Link } from 'react-router';
 import { PipelineEditor } from './PipelineEditor';
 import {
-        Fetch, getRestUrl, buildPipelineUrl, capabilityAugmenter, locationService,
-        ContentPageHeader, UrlConfig, Utils, pipelineService, AppConfig, Paths,
+        Fetch, getRestUrl, buildPipelineUrl, locationService,
+        ContentPageHeader, pipelineService, Paths, RunApi,
     } from '@jenkins-cd/blueocean-core-js';
 import {
     Dialog,
@@ -27,7 +27,7 @@ class SaveDialog extends React.Component {
         const { branch } = this.props;
         this.state = { branch: branch };
         this.branchOptions = [
-           { branch: branch, toString: () => `Commit to ${branch}`},
+           { branch: branch, toString: () => ['Commit to ', <i>{branch}</i>]},
            { branch: '', toString: () => `Commit to new branch`},
        ];
     }
@@ -53,14 +53,14 @@ class SaveDialog extends React.Component {
         
         return (
             <Dialog onDismiss={() => this.cancel()} title="Save Pipeline" buttons={buttons} className="save-pipeline-dialog">
-                <div>Saving the pipeline will commit a Jenkinsfile to the repository</div>
+                <div style={{width: '400px', marginBottom: '16px'}}>Saving the pipeline will commit a Jenkinsfile to the repository.</div>
                 <FormElement title="Description">
                     <TextArea placeholder="What changed?" defaultValue="" width="100%" cols={2} disabled={this.state.saving}
                         onChange={value => this.setState({commitMessage: value})} />
                 </FormElement>
                 <RadioButtonGroup options={this.branchOptions} defaultOption={this.branchOptions[0]}
                     onChange={o => this.setState({branch: o.branch})} disabled={this.state.saving} />
-                <div className="indent-form">
+                <div className="indent-form" style={{marginBottom: '-6px'}}>
                 <FormElement className="customBranch">
                     <TextInput placeholder="my-new-branch" onChange={value => this.setState({branch: this.branchOptions[1].branch = value})}
                         disabled={this.state.branch !== this.branchOptions[1].branch || this.state.saving} />
@@ -116,20 +116,21 @@ pipeline {
   }
 }            
             `});
-            console.log(err);
             if (err.response.status != 404) {
-                this.showErrorDialog(err.message);
+                this.showErrorDialog(err);
             }
         });
         
         this.href = Paths.rest.pipeline(organization, pipeline);
         pipelineService.fetchPipeline(this.href, { useCache: true })
         .catch(err => {
-            console.log(err);
             // No pipeline, use org folder
             const team = pipeline.split('/')[0];
             this.href = Paths.rest.pipeline(organization, team);
             pipelineService.fetchPipeline(this.href, { useCache: true })
+            .catch(err => {
+                this.showErrorDialog(err);
+            });
         });
     }
 
@@ -158,14 +159,38 @@ pipeline {
         this.setState({ dialog: null });
     }
     
-    showErrorDialog(errorMessage) {
+    showErrorDialog(err, saveRequest) {
+        let errorMessage = err;
+        if (err instanceof String || typeof err === 'string') {
+            errorMessage = err;
+        }
+        else if (err.responseBody && err.responseBody.message) {
+            // Github error
+            errorMessage = err.responseBody.message;
+            // error: 409.
+            if (errorMessage.indexOf('error: 409.') >= 0) {
+                if (this.props.params.branch !== saveRequest.content.branch) {
+                    errorMessage = ['the branch ', <i>{saveRequest.content.branch}</i>, ' already exists'];
+                } else {
+                    errorMessage = ['the pipeline was modified ouside of the editor'];
+                }
+                errorMessage = ['An error occurred saving to Github: ', ...errorMessage];
+            }
+        }
+        else if (err.message) {
+            errorMessage = err.message;
+        }
         const buttons = [
             <button className="btn-primary" onClick={() => this.closeDialog()}>Ok</button>,
         ];
-         
-        this.setState({ dialog: (
-            <Dialog onDismiss={() => this.closeDialog()} title="Error" buttons={buttons}>
-                {errorMessage}
+        
+        this.setState({
+            showSaveDialog: false,
+            dialog: (
+            <Dialog onDismiss={() => this.closeDialog()} title="Error" className="Dialog--error" buttons={buttons}>
+                <div style={{width: '28em'}}>
+                    {errorMessage}
+                </div>
             </Dialog>
         )});
     }
@@ -180,40 +205,48 @@ pipeline {
         });
     }
     
-    save(branch, commitMessage) {
-        const { organization, pipeline } = this.props.params;
+    save(saveToBranch, commitMessage) {
+        const { organization, pipeline, branch } = this.props.params;
         const pipelineJson = convertInternalModelToJson(pipelineStore.pipeline);
         const split = pipeline.split('/');
         const team = split[0];
         const repo = split[1];
+        const saveMessage = commitMessage || (this.state.sha ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
         convertJsonToPipeline(JSON.stringify(pipelineJson), (pipelineScript, err) => {
             if (!err) {
-                const pipelineObj = this.getPipeline();
+                const body = {
+                    "$class" : "io.jenkins.blueocean.blueocean_github_pipeline.GithubScmSaveFileRequest",
+                    "content" : {
+                      "message" : saveMessage,
+                      "path" : "Jenkinsfile",
+                      branch: saveToBranch || 'master',
+                      repo: repo,
+                      "sha" : this.state.sha,
+                      "base64Data" : Base64.encode(pipelineScript),
+                    }
+                };
+                const pipelineObj = pipelineService.getPipeline(this.href);
                 Fetch.fetchJSON(`${getRestUrl({organization:organization, pipeline: team})}scm/content/`, {
                     fetchOptions: {
                         method: 'PUT',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            "$class" : "io.jenkins.blueocean.blueocean_github_pipeline.GithubScmSaveFileRequest",
-                            "content" : {
-                              "message" : commitMessage,
-                              "path" : "Jenkinsfile",
-                              branch: branch || 'master',
-                              repo: repo,
-                              "sha" : this.state.sha,
-                              "base64Data" : Base64.encode(pipelineScript),
-                            }
-                        }),
+                        body: JSON.stringify(body),
                     }
                 })
                 .then(data => {
+                    // If this is a save on the same branch that already has a Jenkinsfile, just re-run it
+                    if (this.state.sha && branch === body.content.branch) {
+                        RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + branch + '/' }}})
+                            .then(() => this.goToActivity())
+                            .catch(err => this.showErrorDialog(err));
+                    } else {
+                        // otherwise, call indexing so this branch gets picked up
+                        saveApi.index(organization, team, () => this.goToActivity(), err => this.showErrorDialog(err));
+                    }
                     this.setState({ sha: data.sha });
-                    saveApi.index(organization, team, () => this.goToActivity());
                 })
-                .catch(ex => {
-                    // TODO error messages, check for invalid credentials
-                    console.log(ex);
-                    this.showErrorDialog(ex.message);
+                .catch(err => {
+                    this.showErrorDialog(err, body);
                 });
             } else {
                 this.showErrorDialog(err);
@@ -221,15 +254,10 @@ pipeline {
         });
     }
 
-    getPipeline() {
-        const pipeline = pipelineService.getPipeline(this.href);
-        return pipeline;
-    }
-    
     render() {
         const { branch } = this.props.params;
         const { pipelineScript } = this.state;
-        const pipeline = this.getPipeline();
+        const pipeline = pipelineService.getPipeline(this.href);
         const repo = this.props.params.pipeline.split('/')[1];
         return <div className="pipeline-page">
             <ContentPageHeader>

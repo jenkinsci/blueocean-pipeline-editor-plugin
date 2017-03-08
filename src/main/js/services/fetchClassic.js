@@ -25,31 +25,38 @@ export default function fetch(path, body, handler, disableLoadingIndicator) {
         });
     };
     if (cache.crumb) {
-    	useCrumb(cache.crumb);
+        useCrumb(cache.crumb);
     } else {
-	    Fetch.fetch(`${UrlConfig.getJenkinsRootURL()}/blue/rest/pipeline-metadata/crumbInfo`, {
-	        fetchOptions: { method: 'GET', disableLoadingIndicator: disableLoadingIndicator }
-	    }).then(response => {
-	        if (!response.ok) {
-	            console.error('An error occurred while fetching:', path);
-	            return;
-	        }
-	
-	        if (cache.crumb) {
-	        	useCrumb(cache.crumb);
-	        } else {
-		        let crumb = response.text();
-		        if (crumb instanceof Promise) {
-		            crumb.then(c => {
-		            	cache.crumb = c;
-		            	useCrumb(c);
-		            });
-		        } else {
-		        	cache.crumb = crumb;
-		            useCrumb(crumb);
-		        }
-	        }
-	    });
+        Fetch.fetch(`${UrlConfig.getJenkinsRootURL()}/blue/rest/pipeline-metadata/crumbInfo`, {
+            fetchOptions: { method: 'GET', disableLoadingIndicator: disableLoadingIndicator }
+        }).then(response => {
+            if (!response.ok) {
+                console.error('An error occurred while fetching:', path);
+                return;
+            }
+    
+            if (cache.crumb) {
+                useCrumb(cache.crumb);
+            } else {
+                try {
+                    let crumb = response.text();
+                    if (crumb instanceof Promise) {
+                        crumb.then(c => {
+                            cache.crumb = c;
+                            useCrumb(c);
+                        })
+                        .catch(err => {
+                            fetch(path, body, handler, disableLoadingIndicator);
+                        });
+                    } else {
+                        cache.crumb = crumb;
+                        useCrumb(crumb);
+                    }
+                } catch(e) {
+                    fetch(path, body, handler, disableLoadingIndicator);
+                }
+            }
+        });
     }
 }
 
