@@ -8,7 +8,6 @@ import pipelineStore from './services/PipelineStore';
 import { convertInternalModelToJson, convertJsonToPipeline, convertPipelineToJson, convertJsonToInternalModel } from './services/PipelineSyntaxConverter';
 import type { PipelineInfo } from './services/PipelineStore';
 import type { PipelineJsonContainer } from './services/PipelineSyntaxConverter';
-import pipelineMetadataService from './services/PipelineMetadataService';
 import pipelineValidator from './services/PipelineValidator';
 import { EditorMain } from './components/editor/EditorMain.jsx';
 
@@ -36,9 +35,7 @@ export class PipelineEditor extends Component<DefaultProps, Props, State> {
     }
 
     componentWillMount() {
-        pipelineMetadataService.getStepListing(steps => {
-            this.handleProps(null, this.props);
-        });
+        this.handleProps(null, this.props);
     }
     
     componentWillReceiveProps(newProps) {

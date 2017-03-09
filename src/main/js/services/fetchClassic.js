@@ -31,8 +31,8 @@ export default function fetch(path, body, handler, disableLoadingIndicator) {
             fetchOptions: { method: 'GET', disableLoadingIndicator: disableLoadingIndicator }
         }).then(response => {
             if (!response.ok) {
-                console.error('An error occurred while fetching:', path);
-                return;
+                if (window.isDevelopmentMode) console.error('An error occurred while fetching:', path);
+                throw response;
             }
     
             if (cache.crumb) {
