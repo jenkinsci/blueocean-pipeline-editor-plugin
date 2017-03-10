@@ -320,7 +320,6 @@ class PipelineLoader extends React.Component {
         convertJsonToPipeline(JSON.stringify(pipelineJson), (pipelineScript, err) => {
             if (!err) {
                 const body = {
-                    "$class": "io.jenkins.blueocean.blueocean_github_pipeline.GithubScmSaveFileRequest",
                     "content": {
                       "message": saveMessage,
                       "path": "Jenkinsfile",
