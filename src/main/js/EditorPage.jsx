@@ -131,9 +131,13 @@ class PipelineLoader extends React.Component {
         pipelineStore.removeListener(this.pipelineUpdated);
     }
 
-    routerWillLeave() {
+    routerWillLeave(e) {
         if (this.pipelineIsModified) {
-            return 'There are unsaved changes, discard them?';
+            const t = 'There are unsaved changes, discard them?';
+            if (e) {
+                e.returnValue = t;
+            }
+            return t;
         }
     }
     
