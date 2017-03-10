@@ -119,6 +119,34 @@ class PipelineLoader extends React.Component {
         this.loadPipeline();
     }
     
+    componentDidMount() {
+        this.context.router.setRouteLeaveHook(this.props.route, e => this.routerWillLeave(e));
+        this.priorUnload = window.onbeforeunload;
+        window.onbeforeunload = e => this.routerWillLeave(e);
+        pipelineStore.addListener(this.pipelineUpdated = p => this.checkForModification());
+    }
+
+    componentWillUnmount() {
+        window.onbeforeunload = this.priorUnload;
+        pipelineStore.removeListener(this.pipelineUpdated);
+    }
+
+    routerWillLeave() {
+        if (this.pipelineIsModified) {
+            return 'There are unsaved changes, discard them?';
+        }
+    }
+    
+    checkForModification() {
+        if (!this.lastPipeline) {
+            this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
+            return;
+        }
+        if (!this.pipelineIsModified) {
+            this.pipelineIsModified = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline)) !== this.lastPipeline;
+        }
+    }
+
     loadPipeline(onComplete) {
         const { organization, pipeline, branch } = this.props.params;
         this.opener = locationService.previous;
@@ -307,6 +335,8 @@ class PipelineLoader extends React.Component {
                     }
                 })
                 .then(data => {
+                    this.pipelineIsModified = false;
+                    this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
                     // If this is a save on the same branch that already has a Jenkinsfile, just re-run it
                     if (this.state.sha && branch === body.content.branch) {
                         RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + branch + '/' }}})
