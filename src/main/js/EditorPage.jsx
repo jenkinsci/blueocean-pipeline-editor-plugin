@@ -50,10 +50,9 @@ class SaveDialog extends React.Component {
     showError(err, saveRequest) {
         const { functions } = this.props;
         let errorMessage = err.message ? err.message : (err.errors ? err.errors.map(e => <div>{e.error}</div>) : err);
-        if (err.responseBody && err.responseBody.message) { 
-            errorMessage = err.responseBody.message;    
+        if (err.responseBody && err.responseBody.message) { // GH JSON is dumped as a string in err.responseBody.message
             // error: 409.
-            if (errorMessage.indexOf('error: 409.') >= 0) {
+            if (err.responseBody.message.indexOf('error: 409.') >= 0) {
                 if (this.props.branch !== saveRequest.content.branch) {
                     errorMessage = ['The branch ', <i>{saveRequest.content.branch}</i>, ' already exists'];
                     this.setState({ branchError: errorMessage });
