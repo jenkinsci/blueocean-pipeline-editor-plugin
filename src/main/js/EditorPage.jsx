@@ -335,7 +335,7 @@ class PipelineLoader extends React.Component {
                     this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
                     // If this is a save on the same branch that already has a Jenkinsfile, just re-run it
                     if (this.state.sha && branch === body.content.branch) {
-                        RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + branch + '/' }}})
+                        RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + encodeURIComponent(branch) + '/' }}})
                             .then(() => this.goToActivity())
                             .catch(err => errorHandler(err, body));//this.showErrorDialog(err));
                     } else {
