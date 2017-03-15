@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import Extensions from '@jenkins-cd/js-extensions';
 import {
         Fetch, getRestUrl, buildPipelineUrl, locationService,
-        ContentPageHeader, pipelineService, Paths, RunApi, ToastService,
+        ContentPageHeader, pipelineService, Paths, RunApi,
     } from '@jenkins-cd/blueocean-core-js';
 import {
     Dialog,
@@ -194,12 +194,6 @@ class PipelineLoader extends React.Component {
                 pipelineStore.setPipeline({
                     agent: { type: 'any' },
                     children: [],
-                });
-                
-                ToastService.newToast({
-                    style: 'info',
-                    caption: "No pipeline found",
-                    text: "Creating a blank pipeline",
                 });
             }
         });
