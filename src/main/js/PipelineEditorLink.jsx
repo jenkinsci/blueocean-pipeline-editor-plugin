@@ -4,6 +4,7 @@ import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import { Icon } from '@jenkins-cd/react-material-icons';
 import { Fetch, Paths, pipelineService } from '@jenkins-cd/blueocean-core-js';
+import Security from './services/Security';
 
 class PipelineEditorLink extends React.Component {
     state = {};
@@ -21,6 +22,10 @@ class PipelineEditorLink extends React.Component {
     }
 
     render() {
+        if (!Security.isCreationEnabled()) {
+            return null;
+        }
+
         if (!this.state.supportsSave) {
             return <div/>;
         }
