@@ -162,6 +162,20 @@ class PipelineLoader extends React.Component {
         const { organization, pipeline, branch } = this.props.params;
         this.opener = locationService.previous;
         
+        const makeEmptyPipeline = () => {
+            // maybe show a dialog the user can choose
+            // empty or template
+            pipelineStore.setPipeline({
+                agent: { type: 'any' },
+                children: [],
+            });
+        };
+
+        if (!pipeline) {
+            makeEmptyPipeline();
+            return; // no pipeline to load
+        }
+
         Fetch.fetchJSON(`${getRestUrl(this.props.params)}scm/content/?branch=${encodeURIComponent(branch)}&path=Jenkinsfile`)
         .then( ({ content }) => {
             const pipelineScript = Base64.decode(content.base64Data);
@@ -196,12 +210,7 @@ class PipelineLoader extends React.Component {
             if (err.response.status != 404) {
                 this.showErrorDialog(err);
             } else {
-                // maybe show a dialog the user can choose
-                // empty or template
-                pipelineStore.setPipeline({
-                    agent: { type: 'any' },
-                    children: [],
-                });
+                makeEmptyPipeline();
             }
         });
         
@@ -366,10 +375,10 @@ class PipelineLoader extends React.Component {
     }
 
     render() {
-        const { branch } = this.props.params;
+        const { pipeline: pipelineName, branch } = this.props.params;
         const { pipelineScript } = this.state;
         const pipeline = pipelineService.getPipeline(this.href);
-        const repo = this.props.params.pipeline.split('/')[1];
+        const repo = pipelineName && pipelineName.split('/')[1];
         return (<div className="pipeline-page">
             <Extensions.Renderer extensionPoint="pipeline.editor.css"/>
             <ContentPageHeader>
@@ -380,7 +389,7 @@ class PipelineLoader extends React.Component {
                 </div>
                 <div className="editor-page-header-controls">
                     <button className="btn-link inverse" onClick={() => this.cancel()}>Cancel</button>
-                    <button className="btn-primary inverse" onClick={() => this.showSaveDialog()}>Save</button>
+                    {pipelineName && <button className="btn-primary inverse" onClick={() => this.showSaveDialog()}>Save</button>}
                 </div>
             </ContentPageHeader>
             {pipelineStore.pipeline &&

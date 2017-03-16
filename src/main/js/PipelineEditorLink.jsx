@@ -38,7 +38,7 @@ class PipelineEditorLink extends React.Component {
         if (!run) {
             pipelinePath.splice(-1);
         }
-        const baseUrl = `/organizations/${pipeline.organization}/pipeline-editor/${encodeURIComponent(pipelinePath.join('/'))}/${branch}`;
+        const baseUrl = `/organizations/${pipeline.organization}/pipeline-editor/${encodeURIComponent(pipelinePath.join('/'))}/${branch}/`;
 
         return (
             <Link className="pipeline-editor-link" to={baseUrl}>
