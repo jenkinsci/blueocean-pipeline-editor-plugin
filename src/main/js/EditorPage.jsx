@@ -19,7 +19,8 @@ import pipelineStore from './services/PipelineStore';
 import { observer } from 'mobx-react';
 import { observable, action } from 'mobx';
 import saveApi from './SaveApi';
-import { EditorMain } from './components/editor/EditorMain.jsx';
+import { EditorMain } from './components/editor/EditorMain';
+import { CopyPastePipelineDialog } from './components/editor/CopyPastePipelineDialog';
 
 const Base64 = { encode: (data) => btoa(data), decode: (str) => atob(str) };
 
@@ -123,11 +124,18 @@ class PipelineLoader extends React.Component {
         this.priorUnload = window.onbeforeunload;
         window.onbeforeunload = e => this.routerWillLeave(e);
         pipelineStore.addListener(this.pipelineUpdated = p => this.checkForModification());
+        document.addEventListener("keydown", this.openPipelineScriptDialog = e => {
+            if (e.keyCode == 83 && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              this.showPipelineScript();
+            }
+          }, false);
     }
 
     componentWillUnmount() {
         window.onbeforeunload = this.priorUnload;
         pipelineStore.removeListener(this.pipelineUpdated);
+        document.removeEventListener('keypress', this.openPipelineScriptDialog);
     }
 
     routerWillLeave(e) {
@@ -225,6 +233,10 @@ class PipelineLoader extends React.Component {
             pipelineStore.setPipeline(pipeline);
             this.setState({ showSaveDialog: false });
         });
+    }
+
+    showPipelineScript() {
+        this.setState({ dialog: <CopyPastePipelineDialog onClose={() => this.closeDialog()} />});
     }
 
     cancel() {
