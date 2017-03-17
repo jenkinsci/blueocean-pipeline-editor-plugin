@@ -176,6 +176,25 @@ class PipelineLoader extends React.Component {
             return; // no pipeline to load
         }
 
+        const showLoadingError = err => {
+            this.showErrorDialog(
+                <div className="errors">
+                    <div>
+                        There was an error loading the pipeline
+                        from the Jenkinsfile from your repository.
+                        Correct the error by editing the Jenkinsfile
+                        directly and committing it back to the repository.
+                    </div>
+                    <div>&nbsp;</div>
+                    <div><i>{this.extractErrorMessage(err)}</i></div>
+                </div>
+                , {
+                    buttonRow: <button className="btn-primary" onClick={() => this.cancel()}>Go Back</button>,
+                    onClose: () => this.cancel(),
+                    title: 'Error loading Pipeline',
+                });
+        };
+        
         Fetch.fetchJSON(`${getRestUrl(this.props.params)}scm/content/?branch=${encodeURIComponent(branch)}&path=Jenkinsfile`)
         .then( ({ content }) => {
             const pipelineScript = Base64.decode(content.base64Data);
@@ -190,15 +209,7 @@ class PipelineLoader extends React.Component {
                         this.forceUpdate();
                     }
                 } else {
-                    this.showErrorDialog(
-                        <div className="errors">
-                            <div>There was an error loading the pipeline</div>
-                            <div>{err.map(e => <div>{e.error}</div>)}</div>
-                        </div>
-                        , {
-                            buttonRow: <button className="btn-primary" onClick={() => this.cancel()}>Go Back</button>,
-                            onClose: () => this.cancel()
-                        });
+                    showLoadingError(err);
                     if(err[0].location) {
                         // revalidate in case something missed it (e.g. create an empty stage then load/save)
                         pipelineValidator.validate();
@@ -208,7 +219,7 @@ class PipelineLoader extends React.Component {
         })
         .catch(err => {
             if (err.response.status != 404) {
-                this.showErrorDialog(err);
+                showLoadingError(err);
             } else {
                 makeEmptyPipeline();
             }
@@ -273,10 +284,13 @@ class PipelineLoader extends React.Component {
         this.setState({ dialog: null });
     }
     
-    showErrorDialog(err, { saveRequest, buttonRow, onClose } = {}) {
+    extractErrorMessage(err) {
         let errorMessage = err;
         if (err instanceof String || typeof err === 'string') {
             errorMessage = err;
+        }
+        else if (err instanceof Array || typeof err === 'array') {
+            errorMessage = err.map(e => <div>{e.error}</div>);
         }
         else if (err.responseBody && err.responseBody.message) {
             // Github error
@@ -294,21 +308,20 @@ class PipelineLoader extends React.Component {
         else if (err.message) {
             errorMessage = err.message;
         }
+        return errorMessage;
+    }
+    
+    showErrorDialog(err, { saveRequest, buttonRow, onClose, title } = {}) {
         const buttons = buttonRow || [
             <button className="btn-primary" onClick={() => this.closeDialog()}>Ok</button>,
         ];
         
-//        this.setState({
-//            showSaveDialog: false,
-//            dialog: <Alerts type="Error" title="Error" message={errorMessage} />
-//        });
-        
         this.setState({
             showSaveDialog: false,
             dialog: (
-            <Dialog onDismiss={() => onClose ? onClose() : this.closeDialog()} title="Error" className="Dialog--error" buttons={buttons}>
+            <Dialog onDismiss={() => onClose ? onClose() : this.closeDialog()} title={title || 'Error'} className="Dialog--error" buttons={buttons}>
                 <div style={{width: '28em'}}>
-                    {errorMessage}
+                    {this.extractErrorMessage(err)}
                 </div>
             </Dialog>
         )});
