@@ -180,10 +180,8 @@ class PipelineLoader extends React.Component {
             this.showErrorDialog(
                 <div className="errors">
                     <div>
-                        There was an error loading the pipeline
-                        from the Jenkinsfile from your repository.
-                        Correct the error by editing the Jenkinsfile
-                        directly and committing it back to the repository.
+                        There was an error loading the pipeline from the Jenkinsfile in this repository.
+                        Correct the error by editing the Jenkinsfile using the declarative syntax then commit it back to the repository.
                     </div>
                     <div>&nbsp;</div>
                     <div><i>{this.extractErrorMessage(err)}</i></div>
