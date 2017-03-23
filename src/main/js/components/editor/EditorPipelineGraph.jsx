@@ -513,10 +513,10 @@ needsLayout = true;
             return getAddIconGroup(placeholderRadius, addStrokeWidth);
         }
 
-        return <g>
+        return (<g>
             <circle className="editor-graph-node" r={nodeRadius} />
             <circle className="editor-graph-node-inner" r={innerDotRadius} />
-        </g>;
+        </g>);
     }
 
     renderNode(node:NodeInfo) {
