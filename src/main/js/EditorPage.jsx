@@ -197,7 +197,7 @@ class PipelineLoader extends React.Component {
         if (!branch) {
             const split = pipeline.split('/');
             const team = split[0];
-            const repo = split.length > 1 ? split[1] : team;;
+            const repo = split.length > 1 ? split[1] : team;
             const provider = 'github';
             Fetch.fetchJSON(`${getRestUrl({organization})}scm/${provider}/`)
             .then( ({ credentialId }) =>
