@@ -42,7 +42,7 @@ class PipelineEditorLink extends React.Component {
 
         return (
             <Link className="pipeline-editor-link" to={baseUrl}>
-                <Icon icon="mode_edit" style={{ fill: run ? '#fff' : '#4A90E2' }} />
+                <Icon icon="mode_edit" size={24} />
             </Link>
         );
     }
