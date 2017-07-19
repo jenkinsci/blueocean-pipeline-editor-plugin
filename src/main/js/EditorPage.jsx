@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router';
 import Extensions from '@jenkins-cd/js-extensions';
 import {
         Fetch, getRestUrl, buildPipelineUrl, locationService,
@@ -13,6 +12,10 @@ import {
     FormElement,
     Alerts,
 } from '@jenkins-cd/design-language';
+
+
+import ScmContentApi, { LoadError } from './api/ScmContentApi';
+
 import { convertInternalModelToJson, convertJsonToPipeline, convertPipelineToJson, convertJsonToInternalModel } from './services/PipelineSyntaxConverter';
 import pipelineValidator from './services/PipelineValidator';
 import pipelineStore from './services/PipelineStore';
@@ -113,6 +116,12 @@ SaveDialog.propTypes = {
 @observer
 class PipelineLoader extends React.Component {
     state = {}
+
+    constructor(props) {
+        super(props);
+
+        this.contentApi = new ScmContentApi();
+    }
     
     componentWillMount() {
         pipelineStore.setPipeline(null); // reset any previous loaded pipeline
@@ -193,6 +202,10 @@ class PipelineLoader extends React.Component {
                     title: 'Error loading Pipeline',
                 });
         };
+
+        const promptForToken = err => {
+            alert('need token ' + err);
+        };
         
         if (!branch) {
             const split = pipeline.split('/');
@@ -211,7 +224,7 @@ class PipelineLoader extends React.Component {
             this.defaultBranch = branch;
         }
 
-        Fetch.fetchJSON(`${getRestUrl(this.props.params)}scm/content/?branch=${encodeURIComponent(branch)}&path=Jenkinsfile`)
+        this.contentApi.loadContent({ organization, pipeline, branch })
         .then( ({ content }) => {
             const pipelineScript = Base64.decode(content.base64Data);
             this.setState({sha: content.sha});
@@ -234,10 +247,12 @@ class PipelineLoader extends React.Component {
             });
         })
         .catch(err => {
-            if (err.response.status != 404) {
-                showLoadingError(err);
-            } else {
+            if (err.type === LoadError.JENKINSFILE_NOT_FOUND) {
                 makeEmptyPipeline();
+            } else if (err.type === LoadError.TOKEN_NOT_FOUND || err.type === LoadError.TOKEN_REVOKED) {
+                promptForToken(err.type);
+            } else {
+                showLoadingError(err);
             }
         });
         
@@ -362,30 +377,21 @@ class PipelineLoader extends React.Component {
         const saveMessage = commitMessage || (this.state.sha ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
         convertJsonToPipeline(JSON.stringify(pipelineJson), (pipelineScript, err) => {
             if (!err) {
-                const body = {
-                    "content": {
-                      "message": saveMessage,
-                      "path": "Jenkinsfile",
-                      branch: saveToBranch || this.defaultBranch,
-                      sourceBranch: branch,
-                      repo: repo,
-                      "sha": this.state.sha,
-                      "base64Data": Base64.encode(pipelineScript),
-                    }
-                };
-                const pipelineObj = pipelineService.getPipeline(this.href);
-                Fetch.fetchJSON(`${getRestUrl({organization: organization, pipeline: team})}scm/content/`, {
-                    fetchOptions: {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(body),
-                    }
+                this.contentApi.saveContent({
+                    organization,
+                    pipeline: team,
+                    repo,
+                    sourceBranch: branch,
+                    targetBranch: saveToBranch || this.defaultBranch,
+                    sha: this.state.sha,
+                    message: saveMessage,
+                    content: pipelineScript,
                 })
                 .then(data => {
                     this.pipelineIsModified = false;
                     this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
                     // If this is a save on the same branch that already has a Jenkinsfile, just re-run it
-                    if (this.state.sha && branch === body.content.branch) {
+                    if (this.state.sha && branch === data.content.branch) {
                         RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + encodeURIComponent(branch) + '/' }}})
                             .then(() => this.goToActivity())
                             .catch(err => errorHandler(err, body));
