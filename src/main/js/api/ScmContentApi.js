@@ -35,7 +35,7 @@ class ScmContentApi {
 
         if (status === 404) {
             throw new TypedError(LoadError.JENKINSFILE_NOT_FOUND, responseBody);
-        } else if (message.indexOf('accessToken not found') !== -1) {
+        } else if (message.indexOf('accessToken not found') !== -1 || message.indexOf('no credentials with github accessToken found') !== -1) {
             throw new TypedError(LoadError.TOKEN_NOT_FOUND, responseBody);
         } else if (message.indexOf('Invalid accessToken') !== -1) {
             throw new TypedError(LoadError.TOKEN_REVOKED, responseBody);

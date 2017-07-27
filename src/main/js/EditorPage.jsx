@@ -14,13 +14,12 @@ import {
 } from '@jenkins-cd/design-language';
 
 
-import ScmContentApi, { LoadError } from './api/ScmContentApi';
+import ScmContentApi, {LoadError} from './api/ScmContentApi';
 
 import { convertInternalModelToJson, convertJsonToPipeline, convertPipelineToJson, convertJsonToInternalModel } from './services/PipelineSyntaxConverter';
 import pipelineValidator from './services/PipelineValidator';
 import pipelineStore from './services/PipelineStore';
 import { observer } from 'mobx-react';
-import { observable, action } from 'mobx';
 import saveApi from './SaveApi';
 import { EditorMain } from './components/editor/EditorMain';
 import { CopyPastePipelineDialog } from './components/editor/CopyPastePipelineDialog';
@@ -167,45 +166,41 @@ class PipelineLoader extends React.Component {
         }
     }
 
+    makeEmptyPipeline() {
+        // maybe show a dialog the user can choose
+        // empty or template
+        pipelineStore.setPipeline({
+            agent: { type: 'any' },
+            children: [],
+        });
+        this.forceUpdate();
+    }
+
+    showLoadingError() {
+        this.showErrorDialog(
+            <div className="errors">
+                <div>
+                    There was an error loading the pipeline from the Jenkinsfile in this repository.
+                    Correct the error by editing the Jenkinsfile using the declarative syntax then commit it back to the repository.
+                </div>
+                <div>&nbsp;</div>
+                <div><i>{this.extractErrorMessage(err)}</i></div>
+            </div>
+            , {
+                buttonRow: <button className="btn-primary" onClick={() => this.cancel()}>Go Back</button>,
+                onClose: () => this.cancel(),
+                title: 'Error loading Pipeline',
+            });
+    }
+
     loadPipeline(onComplete) {
         const { organization, pipeline, branch } = this.props.params;
         this.opener = locationService.previous;
-        
-        const makeEmptyPipeline = () => {
-            // maybe show a dialog the user can choose
-            // empty or template
-            pipelineStore.setPipeline({
-                agent: { type: 'any' },
-                children: [],
-            });
-            this.forceUpdate();
-        };
 
         if (!pipeline) {
-            makeEmptyPipeline();
+            this.makeEmptyPipeline();
             return; // no pipeline to load
         }
-
-        const showLoadingError = err => {
-            this.showErrorDialog(
-                <div className="errors">
-                    <div>
-                        There was an error loading the pipeline from the Jenkinsfile in this repository.
-                        Correct the error by editing the Jenkinsfile using the declarative syntax then commit it back to the repository.
-                    </div>
-                    <div>&nbsp;</div>
-                    <div><i>{this.extractErrorMessage(err)}</i></div>
-                </div>
-                , {
-                    buttonRow: <button className="btn-primary" onClick={() => this.cancel()}>Go Back</button>,
-                    onClose: () => this.cancel(),
-                    title: 'Error loading Pipeline',
-                });
-        };
-
-        const promptForToken = err => {
-            alert('need token ' + err);
-        };
         
         if (!branch) {
             const split = pipeline.split('/');
@@ -224,51 +219,60 @@ class PipelineLoader extends React.Component {
             this.defaultBranch = branch;
         }
 
-        this.contentApi.loadContent({ organization, pipeline, branch })
-        .then( ({ content }) => {
-            const pipelineScript = Base64.decode(content.base64Data);
-            this.setState({sha: content.sha});
-            convertPipelineToJson(pipelineScript, (p, err) => {
-                if (!err) {
-                    const internal = convertJsonToInternalModel(p);
-                    if (onComplete) {
-                        onComplete(internal);
-                    } else {
-                        pipelineStore.setPipeline(internal);
-                        this.forceUpdate();
-                    }
-                } else {
-                    showLoadingError(err);
-                    if(err[0].location) {
-                        // revalidate in case something missed it (e.g. create an empty stage then load/save)
-                        pipelineValidator.validate();
-                    }
-                }
-            });
-        })
-        .catch(err => {
-            if (err.type === LoadError.JENKINSFILE_NOT_FOUND) {
-                makeEmptyPipeline();
-            } else if (err.type === LoadError.TOKEN_NOT_FOUND || err.type === LoadError.TOKEN_REVOKED) {
-                promptForToken(err.type);
-            } else {
-                showLoadingError(err);
-            }
-        });
-        
+        this.loadPipelineMetadata()
+            .then(() => this.loadContent(onComplete));
+    }
+
+    loadPipelineMetadata() {
+        const { organization, pipeline } = this.props.params;
         this.href = Paths.rest.pipeline(organization, pipeline);
-        pipelineService.fetchPipeline(this.href, { useCache: true })
-        .then(pipeline => this.forceUpdate())
-        .catch(err => {
-            // No pipeline, use org folder
-            const team = pipeline.split('/')[0];
-            this.href = Paths.rest.pipeline(organization, team);
-            pipelineService.fetchPipeline(this.href, { useCache: true })
+        return pipelineService.fetchPipeline(this.href, { useCache: true })
             .then(pipeline => this.forceUpdate())
             .catch(err => {
-                this.showErrorDialog(err);
+                // No pipeline, use org folder
+                const team = pipeline.split('/')[0];
+                this.href = Paths.rest.pipeline(organization, team);
+                pipelineService.fetchPipeline(this.href, { useCache: true })
+                    .then(pipeline => this.forceUpdate())
+                    .catch(err => {
+                        this.showErrorDialog(err);
+                    });
             });
-        });
+    }
+
+    loadContent(onComplete) {
+        const { organization, pipeline, branch } = this.props.params;
+        this.contentApi.loadContent({ organization, pipeline, branch })
+            .then( ({ content }) => {
+                const pipelineScript = Base64.decode(content.base64Data);
+                this.setState({sha: content.sha});
+                convertPipelineToJson(pipelineScript, (p, err) => {
+                    if (!err) {
+                        const internal = convertJsonToInternalModel(p);
+                        if (onComplete) {
+                            onComplete(internal);
+                        } else {
+                            pipelineStore.setPipeline(internal);
+                            this.forceUpdate();
+                        }
+                    } else {
+                        this.showLoadingError(err);
+                        if(err[0].location) {
+                            // revalidate in case something missed it (e.g. create an empty stage then load/save)
+                            pipelineValidator.validate();
+                        }
+                    }
+                });
+            })
+            .catch(err => {
+                if (err.type === LoadError.JENKINSFILE_NOT_FOUND) {
+                    this.makeEmptyPipeline();
+                } else if (err.type === LoadError.TOKEN_NOT_FOUND || err.type === LoadError.TOKEN_REVOKED) {
+                    this.showTokenDialog();
+                } else {
+                    this.showLoadingError(err);
+                }
+            });
     }
 
     overwriteChanges(saveToBranch, commitMessage, errorHandler) {
@@ -356,6 +360,53 @@ class PipelineLoader extends React.Component {
                 </div>
             </Dialog>
         )});
+    }
+
+    showTokenDialog() {
+        this.createTokenDialog({loading: true});
+    }
+
+    createTokenDialog({loading = false} = {}) {
+        const pipeline = pipelineService.getPipeline(this.href);
+        const { scmSource } = pipeline;
+        const githubConfig = {
+            scmId: scmSource.id,
+            apiUrl: scmSource.apiUrl,
+        };
+        // hide the dialog until it reports as ready (i.e. credential fetch is done)
+        const dialogClassName = `dialog-token ${loading ? 'loading' : ''}`;
+
+        this.setState({
+            dialog: (
+                <Dialog
+                    className={dialogClassName}
+                    title="Connect to GitHub"
+                    buttons={[]}
+                    onDismiss={() => this.cancel()}
+                >
+                    <Extensions.Renderer
+                        extensionPoint="jenkins.credentials.selection"
+                        onStatus={status => this.onCredentialStatus(status)}
+                        onComplete={cred => this.onCredentialSelected(cred)}
+                        type="github"
+                        githubConfig={githubConfig}
+                    />
+                </Dialog>
+            )
+        });
+    }
+
+    onCredentialStatus(status) {
+        if (status === 'promptReady') {
+            this.createTokenDialog();
+        }
+    }
+
+    onCredentialSelected() {
+        this.loadContent(internal => {
+            pipelineStore.setPipeline(internal);
+            this.setState({dialog: null})
+        });
     }
     
     showSaveDialog() {
