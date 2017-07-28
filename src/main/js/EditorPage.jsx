@@ -437,7 +437,11 @@ class PipelineLoader extends React.Component {
                     sha: this.state.sha,
                     message: saveMessage,
                     content: pipelineScript,
-                })
+                };
+
+                // TODO: building the body so we can pass it down is a little awkward
+                const body = this.contentApi.buildSaveContentRequest(saveParams);
+                this.contentApi.saveContent(saveParams)
                 .then(data => {
                     this.pipelineIsModified = false;
                     this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));

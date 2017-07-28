@@ -46,10 +46,8 @@ class ScmContentApi {
         throw error;
     }
 
-    saveContent({organization, pipeline, repo, sourceBranch, targetBranch, sha, message, path = 'Jenkinsfile', content}) {
-        const contentUrl = `${getRestUrl({organization, pipeline})}scm/content/`;
-
-        const body = {
+    buildSaveContentRequest({organization, pipeline, repo, sourceBranch, targetBranch, sha, message, path = 'Jenkinsfile', content}) {
+        return {
             content: {
                 message,
                 path,
@@ -60,6 +58,14 @@ class ScmContentApi {
                 base64Data: Base64.encode(content),
             }
         };
+    }
+
+    saveContent({organization, pipeline, repo, sourceBranch, targetBranch, sha, message, path = 'Jenkinsfile', content}) {
+        const contentUrl = `${getRestUrl({organization, pipeline})}scm/content/`;
+
+        const body = this.buildSaveContentRequest({
+            organization, pipeline, repo, sourceBranch, targetBranch, sha, message, path, content,
+        });
 
         const fetchOptions = {
             method: 'PUT',
