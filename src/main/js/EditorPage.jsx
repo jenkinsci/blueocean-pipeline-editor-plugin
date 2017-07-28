@@ -114,12 +114,20 @@ SaveDialog.propTypes = {
 
 @observer
 class PipelineLoader extends React.Component {
-    state = {}
+    state = {
+
+    };
 
     constructor(props) {
         super(props);
 
         this.contentApi = new ScmContentApi();
+
+        this.state = {
+            scmSource: null,
+            credential: null,
+            sha: null,
+        };
     }
     
     componentWillMount() {
@@ -193,7 +201,7 @@ class PipelineLoader extends React.Component {
             });
     }
 
-    loadPipeline(onComplete) {
+    loadPipeline() {
         const { organization, pipeline, branch } = this.props.params;
         this.opener = locationService.previous;
 
@@ -220,24 +228,34 @@ class PipelineLoader extends React.Component {
         }
 
         this.loadPipelineMetadata()
-            .then(() => this.loadContent(onComplete));
+            .then(() => this.checkForToken());
+    }
+
+    refreshPipeline(onComplete) {
+        this.loadContent(onComplete);
     }
 
     loadPipelineMetadata() {
         const { organization, pipeline } = this.props.params;
         this.href = Paths.rest.pipeline(organization, pipeline);
         return pipelineService.fetchPipeline(this.href, { useCache: true })
-            .then(pipeline => this.forceUpdate())
+            .then(pipeline => this._savePipelineMetadata(pipeline))
             .catch(err => {
                 // No pipeline, use org folder
                 const team = pipeline.split('/')[0];
                 this.href = Paths.rest.pipeline(organization, team);
                 pipelineService.fetchPipeline(this.href, { useCache: true })
-                    .then(pipeline => this.forceUpdate())
+                    .then(pipeline => this._savePipelineMetadata(pipeline))
                     .catch(err => {
                         this.showErrorDialog(err);
                     });
             });
+    }
+
+    _savePipelineMetadata(pipeline) {
+        this.setState({
+            scmSource: pipeline.scmSource,
+        });
     }
 
     loadContent(onComplete) {
@@ -268,7 +286,7 @@ class PipelineLoader extends React.Component {
                 if (err.type === LoadError.JENKINSFILE_NOT_FOUND) {
                     this.makeEmptyPipeline();
                 } else if (err.type === LoadError.TOKEN_NOT_FOUND || err.type === LoadError.TOKEN_REVOKED) {
-                    this.showTokenDialog();
+                    this.createTokenDialog();
                 } else {
                     this.showLoadingError(err);
                 }
@@ -277,14 +295,14 @@ class PipelineLoader extends React.Component {
 
     overwriteChanges(saveToBranch, commitMessage, errorHandler) {
         const currentPipeline = pipelineStore.pipeline;
-        this.loadPipeline(() => {
+        this.refreshPipeline(() => {
             pipelineStore.setPipeline(currentPipeline);
             this.save(saveToBranch, commitMessage, errorHandler);
         });
     }
 
     discardChanges() {
-        this.loadPipeline(pipeline => {
+        this.refreshPipeline(pipeline => {
             pipelineStore.setPipeline(pipeline);
             this.setState({ showSaveDialog: false });
         });
@@ -362,11 +380,11 @@ class PipelineLoader extends React.Component {
         )});
     }
 
-    showTokenDialog() {
+    checkForToken() {
         this.createTokenDialog({loading: true});
     }
 
-    createTokenDialog({loading = false} = {}) {
+    createTokenDialog({loading = false } = {}) {
         const pipeline = pipelineService.getPipeline(this.href);
         const { scmSource } = pipeline;
         const githubConfig = {
@@ -402,7 +420,11 @@ class PipelineLoader extends React.Component {
         }
     }
 
-    onCredentialSelected() {
+    onCredentialSelected(credential) {
+        this.setState({
+            credential,
+        });
+
         this.loadContent(internal => {
             pipelineStore.setPipeline(internal);
             this.setState({dialog: null})
@@ -428,7 +450,7 @@ class PipelineLoader extends React.Component {
         const saveMessage = commitMessage || (this.state.sha ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
         convertJsonToPipeline(JSON.stringify(pipelineJson), (pipelineScript, err) => {
             if (!err) {
-                this.contentApi.saveContent({
+                const saveParams = {
                     organization,
                     pipeline: team,
                     repo,
@@ -452,7 +474,11 @@ class PipelineLoader extends React.Component {
                             .catch(err => errorHandler(err, body));
                     } else {
                         // otherwise, call indexing so this branch gets picked up
-                        saveApi.index(organization, team, repo, () => this.goToActivity(), err => errorHandler(err));
+                        const { credential, scmSource} = this.state;
+                        saveApi.index(organization, team, repo, scmSource.apiUrl, credential.credentialId,
+                            () => this.goToActivity(),
+                            err => errorHandler(err),
+                        );
                     }
                     this.setState({ sha: data.sha });
                 })

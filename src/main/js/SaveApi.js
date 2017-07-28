@@ -1,18 +1,18 @@
 // @flow
 
-import { action, computed, observable } from 'mobx';
 import { Fetch, getRestUrl, sseService, loadingIndicator, capabilityAugmenter } from '@jenkins-cd/blueocean-core-js';
 
 export class SaveApi {
 
-    indexRepo(organization, teamName, repoName) {
+    indexRepo(organization, teamName, repoName, apiUrl, credentialId) {
         const createUrl = `${getRestUrl({organization})}/pipelines/`;
 
         const requestBody = {
             name: teamName,
             $class: 'io.jenkins.blueocean.blueocean_github_pipeline.GithubPipelineCreateRequest',
             scmConfig: {
-                uri: 'https://api.github.com',
+                credentialId,
+                uri: apiUrl,
                 config: {
                     orgName: teamName,
                     repos: [repoName],
@@ -28,11 +28,10 @@ export class SaveApi {
             body: JSON.stringify(requestBody),
         };
 
-        return Fetch.fetchJSON(createUrl, { fetchOptions })
-            .then(pipeline => capabilityAugmenter.augmentCapabilities(pipeline));
+        return Fetch.fetchJSON(createUrl, { fetchOptions });
     }
 
-    index(organization, folder, repo, complete, onError, progress) {
+    index(organization, folder, repo, apiUrl, credentialId, complete, onError, progress) {
         const cleanup = err => {
             sseService.removeHandler(sseId);
             clearTimeout(timeoutId);
@@ -59,7 +58,7 @@ export class SaveApi {
             }
         });
 
-        this.indexRepo(organization, folder, repo);
+        this.indexRepo(organization, folder, repo, apiUrl, credentialId);
     }
 }
 
