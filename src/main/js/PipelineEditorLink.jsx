@@ -15,7 +15,9 @@ class PipelineEditorLink extends React.Component {
         const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
         pipelineService.fetchPipeline(href, { useCache: true })
         .then(pipeline => {
-            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder') {
+            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder' ||
+                pipeline._class === 'io.jenkins.blueocean.rest.impl.pipeline.MultiBranchPipelineImpl'
+            ) {
                 this.setState({ supportsSave: true });
             }
         });
