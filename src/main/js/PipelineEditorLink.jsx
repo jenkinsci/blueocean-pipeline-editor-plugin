@@ -41,7 +41,7 @@ class PipelineEditorLink extends React.Component {
         const baseUrl = `/organizations/${pipeline.organization}/pipeline-editor/${encodeURIComponent(pipelinePath.join('/'))}/${branch}/`;
 
         return (
-            <Link className="pipeline-editor-link" to={baseUrl}>
+            <Link className="pipeline-editor-link" to={baseUrl} title="Edit">
                 <Icon icon="mode_edit" size={24} />
             </Link>
         );
