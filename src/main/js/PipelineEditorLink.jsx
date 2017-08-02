@@ -3,7 +3,7 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import { Icon } from '@jenkins-cd/react-material-icons';
-import { Paths, pipelineService } from '@jenkins-cd/blueocean-core-js';
+import { Paths, pipelineService, AppConfig } from '@jenkins-cd/blueocean-core-js';
 import Security from './services/Security';
 
 class PipelineEditorLink extends React.Component {
@@ -15,9 +15,10 @@ class PipelineEditorLink extends React.Component {
         const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
         pipelineService.fetchPipeline(href, { useCache: true })
         .then(pipeline => {
-//            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder') {
+            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder'
+            || (AppConfig.isFeatureEnabled('GIT_PIPELINE_EDITOR', false) && /.*MultiBranchPipelineImpl/.test(pipeline._class))) {
                 this.setState({ supportsSave: true });
-//            }
+            }
         });
     }
 
