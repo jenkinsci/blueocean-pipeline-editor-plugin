@@ -10,16 +10,7 @@ class PipelineEditorLink extends React.Component {
     state = {};
 
     componentWillMount() {
-        const { pipeline } = this.props;
-        const folder = pipeline.fullName.split('/')[0];
-        const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
-        pipelineService.fetchPipeline(href, { useCache: true })
-        .then(pipeline => {
-            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder'
-            || (AppConfig.isFeatureEnabled('GIT_PIPELINE_EDITOR', false) && /.*MultiBranchPipelineImpl/.test(pipeline._class))) {
-                this.setState({ supportsSave: true });
-            }
-        });
+        this._loadPipeline();
     }
 
     render() {
@@ -46,6 +37,21 @@ class PipelineEditorLink extends React.Component {
                 <Icon icon="mode_edit" size={24} />
             </Link>
         );
+    }
+
+    _loadPipeline() {
+        const { pipeline } = this.props;
+        const folder = pipeline.fullName.split('/')[0];
+        const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
+        pipelineService.fetchPipeline(href, { useCache: true, disableCapabilites: false })
+            .then(pipeline => {
+                if (pipeline._capabilities &&
+                    pipeline._capabilities
+                        .find(capability => capability === 'io.jenkins.blueocean.rest.model.BluePipelineScm')
+                        || (AppConfig.isFeatureEnabled('GIT_PIPELINE_EDITOR', false) && /.*MultiBranchPipelineImpl/.test(pipeline._class))) {
+                    this.setState({ supportsSave: true });
+                }
+            });
     }
 }
 
