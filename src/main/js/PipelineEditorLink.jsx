@@ -5,7 +5,6 @@ import { Link } from 'react-router';
 import { Icon } from '@jenkins-cd/react-material-icons';
 import { Paths, pipelineService } from '@jenkins-cd/blueocean-core-js';
 import Security from './services/Security';
-import { action } from 'mobx';
 
 class PipelineEditorLink extends React.Component {
     state = {};
@@ -40,7 +39,6 @@ class PipelineEditorLink extends React.Component {
         );
     }
 
-    @action
     _loadPipeline() {
         const { pipeline } = this.props;
         const folder = pipeline.fullName.split('/')[0];
