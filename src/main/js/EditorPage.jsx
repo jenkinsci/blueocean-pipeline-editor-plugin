@@ -1,5 +1,4 @@
 import React from 'react';
-import { Link } from 'react-router';
 import Extensions from '@jenkins-cd/js-extensions';
 import {
         Fetch, getRestUrl, buildPipelineUrl, locationService,
@@ -407,7 +406,8 @@ class PipelineLoader extends React.Component {
                          */
                         if (this.state.scmId.startsWith('github')) {
                             saveApi.index(organization, team, repo, () => this.goToActivity(), err => errorHandler(err));
-                        } else { //other scms, which are always MBP
+                        } else {
+                            //other scms, which are always MBP
                             RunApi.startRun({ _links: { self: { href: this.href + '/' }}})
                                 .then(() => this.goToActivity())
                                 .catch(err => errorHandler(err, body));

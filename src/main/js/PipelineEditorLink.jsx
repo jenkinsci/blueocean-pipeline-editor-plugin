@@ -3,24 +3,15 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import { Icon } from '@jenkins-cd/react-material-icons';
-import { Fetch, Paths, pipelineService } from '@jenkins-cd/blueocean-core-js';
+import { Paths, pipelineService, capabilityAugmenter } from '@jenkins-cd/blueocean-core-js';
 import Security from './services/Security';
+import { action } from 'mobx';
 
 class PipelineEditorLink extends React.Component {
     state = {};
 
     componentWillMount() {
-        const { pipeline } = this.props;
-        const folder = pipeline.fullName.split('/')[0];
-        const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
-        pipelineService.fetchPipeline(href, { useCache: true })
-        .then(pipeline => {
-            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder' ||
-                pipeline._class === 'io.jenkins.blueocean.rest.impl.pipeline.MultiBranchPipelineImpl'
-            ) {
-                this.setState({ supportsSave: true });
-            }
-        });
+        this._loadPipeline();
     }
 
     render() {
@@ -47,6 +38,21 @@ class PipelineEditorLink extends React.Component {
                 <Icon icon="mode_edit" style={{ fill: run ? '#fff' : '#4A90E2' }} />
             </Link>
         );
+    }
+
+    @action
+    _loadPipeline() {
+        const { pipeline } = this.props;
+        const folder = pipeline.fullName.split('/')[0];
+        const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
+        pipelineService.fetchPipeline(href, { useCache: true, disableCapabilites: false })
+            .then(pipeline => {
+                if (pipeline._capabilities &&
+                    pipeline._capabilities
+                        .find(capability => capability === 'io.jenkins.blueocean.rest.model.BluePipelineScm')){
+                    this.setState({ supportsSave: true });
+                }
+            });
     }
 }
 
