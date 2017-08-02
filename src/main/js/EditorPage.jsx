@@ -197,7 +197,7 @@ class PipelineLoader extends React.Component {
         if (!branch) {
             const split = pipeline.split('/');
             const team = split[0];
-            const repo = split[1];
+            const repo = split.length > 1 ? split[1] : team;
             const provider = 'github';
             Fetch.fetchJSON(`${getRestUrl({organization})}scm/${provider}/`)
             .then( ({ credentialId }) =>
@@ -214,7 +214,7 @@ class PipelineLoader extends React.Component {
         Fetch.fetchJSON(`${getRestUrl(this.props.params)}scm/content/?branch=${encodeURIComponent(branch)}&path=Jenkinsfile`)
         .then( ({ content }) => {
             const pipelineScript = Base64.decode(content.base64Data);
-            this.setState({sha: content.sha});
+            this.setState({ sha: content.sha, isSaved: true });
             convertPipelineToJson(pipelineScript, (p, err) => {
                 if (!err) {
                     const internal = convertJsonToInternalModel(p);
@@ -359,7 +359,7 @@ class PipelineLoader extends React.Component {
         const split = pipeline.split('/');
         const team = split[0];
         const repo = split[1];
-        const saveMessage = commitMessage || (this.state.sha ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
+        const saveMessage = commitMessage || (this.state.isSaved ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
         convertJsonToPipeline(JSON.stringify(pipelineJson), (pipelineScript, err) => {
             if (!err) {
                 const body = {
@@ -368,7 +368,7 @@ class PipelineLoader extends React.Component {
                       "path": "Jenkinsfile",
                       branch: saveToBranch || this.defaultBranch,
                       sourceBranch: branch,
-                      repo: repo,
+                      repo: repo ? repo : team, // if no repo, this is not in an org folder
                       "sha": this.state.sha,
                       "base64Data": Base64.encode(pipelineScript),
                     }
@@ -385,7 +385,12 @@ class PipelineLoader extends React.Component {
                     this.pipelineIsModified = false;
                     this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
                     // If this is a save on the same branch that already has a Jenkinsfile, just re-run it
-                    if (this.state.sha && branch === body.content.branch) {
+//                    if (!repo) { // this is a multibranch, not org folder, run it to index
+//                        RunApi.startRun({ _links: { self: { href: this.href }}})
+//                            .then(() => this.goToActivity())
+//                            .catch(err => errorHandler(err, body));
+//                    } else
+                    if (this.state.isSaved && branch === body.content.branch) {
                         RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + encodeURIComponent(branch) + '/' }}})
                             .then(() => this.goToActivity())
                             .catch(err => errorHandler(err, body));
@@ -393,7 +398,7 @@ class PipelineLoader extends React.Component {
                         // otherwise, call indexing so this branch gets picked up
                         saveApi.index(organization, team, repo, () => this.goToActivity(), err => errorHandler(err));
                     }
-                    this.setState({ sha: data.sha });
+                    this.setState({ sha: data.sha, isSaved: true });
                 })
                 .catch(err => {
                     errorHandler(err, body);

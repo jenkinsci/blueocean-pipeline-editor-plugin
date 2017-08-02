@@ -6,22 +6,23 @@ import { Fetch, getRestUrl, sseService, loadingIndicator, capabilityAugmenter } 
 export class SaveApi {
 
     indexRepo(organization, teamName, repoName) {
-        const createUrl = `${getRestUrl({organization})}/pipelines/`;
-
+        const createUrl = repoName ? `${getRestUrl({organization})}pipelines/` : `${getRestUrl({organization, pipeline: teamName})}`;
+        const repo = repoName ? repoName : teamName; // may not be an org folder
+        const jenkinsClass = repoName ? 'io.jenkins.blueocean.blueocean_github_pipeline.GithubPipelineCreateRequest'
+                : 'io.jenkins.blueocean.blueocean_git_pipeline.GitPipelineUpdateRequest';
         const requestBody = {
             name: teamName,
-            $class: 'io.jenkins.blueocean.blueocean_github_pipeline.GithubPipelineCreateRequest',
+            $class: jenkinsClass,
             scmConfig: {
-                uri: 'https://api.github.com',
                 config: {
                     orgName: teamName,
-                    repos: [repoName],
+                    repos: [repo],
                 },
             },
         };
 
         const fetchOptions = {
-            method: 'POST',
+            method: repoName ? 'POST' : 'PUT',
             headers: {
                 'Content-Type': 'application/json',
             },
@@ -43,13 +44,13 @@ export class SaveApi {
                 complete();
             }
         };
-        
+
         loadingIndicator.show();
         
         const timeoutId = setTimeout(() => {
             cleanup();
         }, 60*1000);
-        
+
         const sseId = sseService.registerHandler(event => {
             if (event.job_multibranch_indexing_result === 'SUCCESS') {
                 cleanup();
