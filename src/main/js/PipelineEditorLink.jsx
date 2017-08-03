@@ -45,13 +45,25 @@ class PipelineEditorLink extends React.Component {
         const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
         pipelineService.fetchPipeline(href, { useCache: true, disableCapabilites: false })
             .then(pipeline => {
-                if (pipeline._capabilities &&
-                    pipeline._capabilities
-                        .find(capability => capability === 'io.jenkins.blueocean.rest.model.BluePipelineScm')
-                        || (AppConfig.isFeatureEnabled('GIT_PIPELINE_EDITOR', false) && /.*MultiBranchPipelineImpl/.test(pipeline._class))) {
+                if (this._canSavePipeline(pipeline)) {
                     this.setState({ supportsSave: true });
                 }
             });
+    }
+    
+    _canSavePipeline(pipeline) {
+        if (pipeline.scmSource && pipeline.scmSource.id === 'git') {
+            if (AppConfig.isFeatureEnabled('GIT_PIPELINE_EDITOR', false)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (pipeline._capabilities && pipeline._capabilities
+                .find(capability => capability === 'io.jenkins.blueocean.rest.model.BluePipelineScm')) {
+            return true;
+        }
+        return false;
     }
 }
 
