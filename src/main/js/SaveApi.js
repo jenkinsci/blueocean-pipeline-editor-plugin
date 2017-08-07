@@ -9,7 +9,7 @@ export class SaveApi {
         const createUrl = repoName ? `${getRestUrl({organization})}pipelines/` : `${getRestUrl({organization, pipeline: teamName})}`;
         const repo = repoName ? repoName : teamName; // may not be an org folder
         const jenkinsClass = repoName ? 'io.jenkins.blueocean.blueocean_github_pipeline.GithubPipelineCreateRequest'
-                : 'io.jenkins.blueocean.blueocean_git_pipeline.GitPipelineUpdateRequest';
+                : 'io.jenkins.blueocean.blueocean_git_pipeline.GitPipelineCreateRequest';
         const requestBody = {
             name: teamName,
             $class: jenkinsClass,
