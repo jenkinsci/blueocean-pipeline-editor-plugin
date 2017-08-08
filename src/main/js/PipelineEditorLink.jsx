@@ -3,22 +3,14 @@
 import React, { PropTypes } from 'react';
 import { Link } from 'react-router';
 import { Icon } from '@jenkins-cd/react-material-icons';
-import { Paths, pipelineService } from '@jenkins-cd/blueocean-core-js';
+import { Paths, pipelineService, AppConfig } from '@jenkins-cd/blueocean-core-js';
 import Security from './services/Security';
 
 class PipelineEditorLink extends React.Component {
     state = {};
 
     componentWillMount() {
-        const { pipeline } = this.props;
-        const folder = pipeline.fullName.split('/')[0];
-        const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
-        pipelineService.fetchPipeline(href, { useCache: true })
-        .then(pipeline => {
-            if (pipeline._class === 'io.jenkins.blueocean.blueocean_github_pipeline.GithubOrganizationFolder') {
-                this.setState({ supportsSave: true });
-            }
-        });
+        this._loadPipeline();
     }
 
     render() {
@@ -41,10 +33,37 @@ class PipelineEditorLink extends React.Component {
         const baseUrl = `/organizations/${pipeline.organization}/pipeline-editor/${encodeURIComponent(pipelinePath.join('/'))}/${branch}/`;
 
         return (
-            <Link className="pipeline-editor-link" to={baseUrl}>
+            <Link className="pipeline-editor-link" to={baseUrl} title="Edit">
                 <Icon icon="mode_edit" size={24} />
             </Link>
         );
+    }
+
+    _loadPipeline() {
+        const { pipeline } = this.props;
+        const folder = pipeline.fullName.split('/')[0];
+        const href = Paths.rest.apiRoot() + '/organizations/' + pipeline.organization + '/pipelines/' + folder + '/';
+        pipelineService.fetchPipeline(href, { useCache: true, disableCapabilites: false })
+            .then(pipeline => {
+                if (this._canSavePipeline(pipeline)) {
+                    this.setState({ supportsSave: true });
+                }
+            });
+    }
+    
+    _canSavePipeline(pipeline) {
+        if (pipeline.scmSource && pipeline.scmSource.id === 'git') {
+            if (AppConfig.isFeatureEnabled('GIT_PIPELINE_EDITOR', false)) {
+                return true;
+            } else {
+                return false;
+            }
+        }
+        if (pipeline._capabilities && pipeline._capabilities
+                .find(capability => capability === 'io.jenkins.blueocean.rest.model.BluePipelineScm')) {
+            return true;
+        }
+        return false;
     }
 }
 

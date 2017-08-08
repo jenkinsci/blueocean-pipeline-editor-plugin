@@ -213,11 +213,11 @@ class PipelineLoader extends React.Component {
         if (!branch) {
             const split = pipeline.split('/');
             const team = split[0];
-            const repo = split[1];
-            const provider = 'github';
-            Fetch.fetchJSON(`${getRestUrl({organization})}scm/${provider}/`)
+            const repo = split.length > 1 ? split[1] : team;
+            const scmId = this.state.scmSource.id;
+            Fetch.fetchJSON(`${getRestUrl({organization})}scm/${scmId}/`)
             .then( ({ credentialId }) =>
-                Fetch.fetchJSON(`${getRestUrl({organization})}scm/${provider}/organizations/${team}/repositories/${repo}/?credentialId=${credentialId}`)
+                Fetch.fetchJSON(`${getRestUrl({organization})}scm/${scmId}/organizations/${team}/repositories/${repo}/?credentialId=${credentialId}`)
             )
             .then( ({ defaultBranch }) => {
                 this.defaultBranch = defaultBranch || 'master';
@@ -430,7 +430,7 @@ class PipelineLoader extends React.Component {
             this.setState({dialog: null});
         });
     }
-    
+
     showSaveDialog() {
         pipelineValidator.validate(err => {
             if (!pipelineValidator.hasValidationErrors(pipelineStore.pipeline)) {
@@ -447,7 +447,7 @@ class PipelineLoader extends React.Component {
         const split = pipeline.split('/');
         const team = split[0];
         const repo = split[1];
-        const saveMessage = commitMessage || (this.state.sha ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
+        const saveMessage = commitMessage || (this.state.isSaved ? 'Updated Jenkinsfile' : 'Added Jenkinsfile');
         convertJsonToPipeline(JSON.stringify(pipelineJson), (pipelineScript, err) => {
             if (!err) {
                 const saveParams = {
@@ -468,19 +468,29 @@ class PipelineLoader extends React.Component {
                     this.pipelineIsModified = false;
                     this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
                     // If this is a save on the same branch that already has a Jenkinsfile, just re-run it
-                    if (this.state.sha && branch === data.content.branch) {
+                    if (this.state.isSaved && branch === data.content.branch) {
                         RunApi.startRun({ _links: { self: { href: this.href + 'branches/' + encodeURIComponent(branch) + '/' }}})
                             .then(() => this.goToActivity())
                             .catch(err => errorHandler(err, body));
                     } else {
-                        // otherwise, call indexing so this branch gets picked up
-                        const { credential, scmSource} = this.state;
-                        saveApi.index(organization, team, repo, scmSource.apiUrl, credential.credentialId,
-                            () => this.goToActivity(),
-                            err => errorHandler(err),
-                        );
+                        // if a different branch, call indexing so this one gets picked up
+                        // only time we have 'github' is when we are using an org folder
+                        // in which case use the existing saveApi
+                        const scmId = this.state.scmSource.id;
+                        if (scmId.startsWith('github')) {
+                            const {credential, scmSource} = this.state;
+                            saveApi.index(organization, team, repo, scmSource.apiUrl, credential.credentialId,
+                                () => this.goToActivity(),
+                                err => errorHandler(err),
+                            );
+                        } else {
+                            //other scms, which are always MBP
+                            RunApi.startRun({ _links: { self: { href: this.href + '/' }}})
+                                .then(() => this.goToActivity())
+                                .catch(err => errorHandler(err, body));
+                        }
                     }
-                    this.setState({ sha: data.sha });
+                    this.setState({ sha: data.sha, isSaved: true });
                 })
                 .catch(err => {
                     errorHandler(err, body);
