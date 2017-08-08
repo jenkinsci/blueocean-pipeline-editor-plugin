@@ -400,10 +400,9 @@ class PipelineLoader extends React.Component {
                             .then(() => this.goToActivity())
                             .catch(err => errorHandler(err, body));
                     } else {
-                        // otherwise, call indexing so this branch gets picked up
-                        /**
-                         * orgFolder we continue indexing how we have been indexing.
-                         */
+                        // if a different branch, call indexing so this one gets picked up
+                        // only time we have 'github' is when we are using an org folder
+                        // in which case use the existing saveApi
                         if (this.state.scmId.startsWith('github')) {
                             saveApi.index(organization, team, repo, () => this.goToActivity(), err => errorHandler(err));
                         } else {
