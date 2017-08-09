@@ -122,14 +122,13 @@ class PipelineLoader extends React.Component {
         const split = pipeline.split('/');
         const team = split[0];
         let href = Paths.rest.pipeline(organization, team);
-
         pipelineService.fetchPipeline(href, { useCache: true })
             .then(pipeline => {
                 if(pipeline.scmSource && pipeline.scmSource.id) {
                     this.setState({ scmId: pipeline.scmSource.id });
                 }
+                this.loadPipeline();
             });
-        this.loadPipeline();
     }
     
     componentDidMount() {
