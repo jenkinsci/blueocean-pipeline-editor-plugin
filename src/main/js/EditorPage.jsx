@@ -430,12 +430,16 @@ class PipelineLoader extends React.Component {
         const { pipelineScript } = this.state;
         const pipeline = pipelineService.getPipeline(this.href);
         const repo = pipelineName && pipelineName.split('/')[1];
+        let title = pipeline ? decodeURIComponent(pipeline.fullDisplayName.replace('/', ' / ')) : pipelineName;
+        if (branch || repo){
+            title += ' / ' + (branch || repo);
+        }
         return (<div className="pipeline-page">
             <Extensions.Renderer extensionPoint="pipeline.editor.css"/>
             <ContentPageHeader>
                 <div className="u-flex-grow">
                     <h1>
-                        {pipeline && (decodeURIComponent(pipeline.fullDisplayName.replace('/', ' / ')) + ' / ' + (branch || repo))}
+                        {pipeline && title}
                     </h1>
                 </div>
                 <div className="editor-page-header-controls">
