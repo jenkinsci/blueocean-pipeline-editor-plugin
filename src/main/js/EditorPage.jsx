@@ -409,9 +409,7 @@ class PipelineLoader extends React.Component {
                             saveApi.index(organization, team, repo, () => this.goToActivity(), err => errorHandler(err));
                         } else {
                             //other scms, which are always MBP
-                            RunApi.startRun({ _links: { self: { href: this.href + '/' }}})
-                                .then(() => this.goToActivity())
-                                .catch(err => errorHandler(err, body));
+                            saveApi.indexMbp(this.href, () => this.goToActivity(), err => errorHandler(err));
                         }
                     }
                     this.setState({ sha: data.sha, isSaved: true });
