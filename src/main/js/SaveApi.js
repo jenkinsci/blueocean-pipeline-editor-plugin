@@ -15,7 +15,7 @@ export class SaveApi {
         } else {
             onComplete();
         }
-    };
+    }
 
     _registerSse(timeoutId, onComplete, onError) {
         const sseId = sseService.registerHandler(event => {
@@ -58,7 +58,7 @@ export class SaveApi {
     index(organization, folder, repo, complete, onError, progress) {
         loadingIndicator.show();
         const timeoutId = setTimeout(() => {
-            cleanup(timeoutId, complete, onError);
+            this._cleanup(timeoutId, complete, onError);
         }, TIMEOUT);
         this._registerSse(timeoutId, complete, onError);
         this.indexRepo(organization, folder, repo);
@@ -73,11 +73,10 @@ export class SaveApi {
     indexMbp(href, onComplete, onError) {
         loadingIndicator.show();
         const timeoutId = setTimeout(() => {
-            cleanup(timeoutId, onComplete, onError);
+            this._cleanup(timeoutId, onComplete, onError);
         }, TIMEOUT);
         this._registerSse(timeoutId, onComplete, onError);
         RunApi.startRun({ _links: { self: { href: href + '/' }}})
-            .then(() => onComplete)
             .catch(err => onError);
     }
 }
