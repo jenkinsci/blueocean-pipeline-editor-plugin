@@ -129,7 +129,7 @@ class PipelineLoader extends React.Component {
             sha: null,
         };
     }
-    
+
     componentWillMount() {
         pipelineStore.setPipeline(null); // reset any previous loaded pipeline
         this.loadPipeline();
@@ -223,18 +223,13 @@ class PipelineLoader extends React.Component {
 
     loadPipelineMetadata() {
         const { organization, pipeline } = this.props.params;
-        this.href = Paths.rest.pipeline(organization, pipeline);
+        const split = pipeline.split('/');
+        const team = split[0];
+        this.href = Paths.rest.pipeline(organization, team);
         return pipelineService.fetchPipeline(this.href, { useCache: true })
             .then(pipeline => this._savePipelineMetadata(pipeline))
             .catch(err => {
-                // No pipeline, use org folder
-                const team = pipeline.split('/')[0];
-                this.href = Paths.rest.pipeline(organization, team);
-                pipelineService.fetchPipeline(this.href, { useCache: true })
-                    .then(pipeline => this._savePipelineMetadata(pipeline))
-                    .catch(err => {
-                        this.showErrorDialog(err);
-                    });
+                this.showErrorDialog(err);
             });
     }
 
@@ -246,6 +241,7 @@ class PipelineLoader extends React.Component {
             const team = split[0];
             const repo = split.length > 1 ? split[1] : team;
             const { id: scmId, apiUrl } = this.state.scmSource;
+            // TODO: bitbucket isn't passing the pipeline as "orgname/reponame" so this request 404's
             let repositoryUrl = `${getRestUrl({organization})}scm/${scmId}/organizations/${team}/repositories/${repo}/`;
             if (apiUrl) {
                 repositoryUrl += `?apiUrl=${apiUrl}`;
@@ -493,9 +489,7 @@ class PipelineLoader extends React.Component {
                             );
                         } else {
                             //other scms, which are always MBP
-                            RunApi.startRun({ _links: { self: { href: this.href + '/' }}})
-                                .then(() => this.goToActivity())
-                                .catch(err => errorHandler(err, body));
+                            saveApi.indexMbp(this.href, () => this.goToActivity(), err => errorHandler(err));
                         }
                     }
                     this.setState({ sha: data.sha, isSaved: true });
@@ -514,12 +508,16 @@ class PipelineLoader extends React.Component {
         const { pipelineScript } = this.state;
         const pipeline = pipelineService.getPipeline(this.href);
         const repo = pipelineName && pipelineName.split('/')[1];
+        let title = pipeline ? decodeURIComponent(pipeline.fullDisplayName.replace('/', ' / ')) : pipelineName;
+        if (branch || repo){
+            title += ' / ' + (branch || repo);
+        }
         return (<div className="pipeline-page">
             <Extensions.Renderer extensionPoint="pipeline.editor.css"/>
             <ContentPageHeader>
                 <div className="u-flex-grow">
                     <h1>
-                        {pipeline && (decodeURIComponent(pipeline.fullDisplayName.replace('/', ' / ')) + ' / ' + (branch || repo))}
+                        {pipeline && title}
                     </h1>
                 </div>
                 <div className="editor-page-header-controls">

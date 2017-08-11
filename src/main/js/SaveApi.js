@@ -1,8 +1,32 @@
 // @flow
 
-import { Fetch, getRestUrl, sseService, loadingIndicator } from '@jenkins-cd/blueocean-core-js';
+import { Fetch, getRestUrl, sseService, loadingIndicator, RunApi } from '@jenkins-cd/blueocean-core-js';
+
+const TIMEOUT = 60*1000;
 
 export class SaveApi {
+
+    _cleanup(sseId, timeoutId, onComplete, onError, err) {
+        sseService.removeHandler(sseId);
+        clearTimeout(timeoutId);
+        loadingIndicator.hide();
+        if (err && onError) {
+            onError(err);
+        } else {
+            onComplete();
+        }
+    }
+
+    _registerSse(timeoutId, onComplete, onError) {
+        const sseId = sseService.registerHandler(event => {
+            if (event.job_multibranch_indexing_result === 'SUCCESS') {
+                this._cleanup(sseId, timeoutId, onComplete, onError);
+            }
+            if (event.job_multibranch_indexing_result === 'FAILURE') {
+                this._cleanup(sseId, timeoutId, onComplete, onError, { message: 'Indexing failed' });
+            }
+        });
+    }
 
     indexRepo(organization, teamName, repoName, scmId, apiUrl) {
         const createUrl = `${getRestUrl({organization})}/pipelines/`;
@@ -31,36 +55,33 @@ export class SaveApi {
         return Fetch.fetchJSON(createUrl, { fetchOptions });
     }
 
-    index(organization, folder, repo, apiUrl, credentialId, complete, onError, progress) {
-        const cleanup = err => {
-            sseService.removeHandler(sseId);
-            clearTimeout(timeoutId);
-            loadingIndicator.hide();
-            if (err && onError) {
-                onError(err);
-            } else {
-                complete();
-            }
-        };
-        
+    index(organization, folder, repo, scmId, apiUrl, complete, onError, progress) {
         loadingIndicator.show();
-        
         const timeoutId = setTimeout(() => {
-            cleanup();
-        }, 60*1000);
-        
-        const sseId = sseService.registerHandler(event => {
-            if (event.job_multibranch_indexing_result === 'SUCCESS') {
-                cleanup();
-            }
-            if (event.job_multibranch_indexing_result === 'FAILURE') {
-                cleanup({ message: 'Indexing failed' });
-            }
-        });
+            this._cleanup(timeoutId, complete, onError);
+        }, TIMEOUT);
+        this._registerSse(timeoutId, complete, onError);
+        this.indexRepo(organization, folder, repo, scmId, apiUrl);
+    }
 
-        this.indexRepo(organization, folder, repo, apiUrl, credentialId);
+    /**
+     * Indexes Multibranch pipeline
+     * @param href URL of MBP pipeline
+     * @param onComplete on success callback
+     * @param onError on error callback
+     */
+    indexMbp(href, onComplete, onError) {
+        loadingIndicator.show();
+        const timeoutId = setTimeout(() => {
+            this._cleanup(timeoutId, onComplete, onError);
+        }, TIMEOUT);
+        this._registerSse(timeoutId, onComplete, onError);
+        RunApi.startRun({ _links: { self: { href: href + '/' }}})
+            .catch(err => onError);
     }
 }
+
+
 
 const saveApi = new SaveApi();
 
