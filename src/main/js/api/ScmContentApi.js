@@ -21,8 +21,10 @@ export const LoadError = {
 class ScmContentApi {
 
     loadContent({organization, pipeline, branch, path = 'Jenkinsfile'}) {
-        const contentUrl = `${getRestUrl({ organization, pipeline })}scm/content?branch=${encodeURIComponent(branch)}&path=${path}`;
-
+        let contentUrl = `${getRestUrl({ organization, pipeline })}scm/content?path=${path}`;
+        if (branch) {
+            contentUrl += `&branch=${encodeURIComponent(branch)}`;
+        }
         return Fetch.fetchJSON(contentUrl)
             .then(result => result)
             .catch(error => this._loadContentErrorHandler(error));

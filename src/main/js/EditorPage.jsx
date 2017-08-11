@@ -241,7 +241,7 @@ class PipelineLoader extends React.Component {
             const team = split[0];
             const repo = split.length > 1 ? split[1] : team;
             const { id: scmId, apiUrl } = this.state.scmSource;
-            // TODO: bitbucket isn't passing the pipeline as "orgname/reponame" so this request 404's
+            // TODO: bitbucket isn't passing the pipeline in "orgname/reponame" format so this request 404's with bogus team name
             let repositoryUrl = `${getRestUrl({organization})}scm/${scmId}/organizations/${team}/repositories/${repo}/`;
             if (apiUrl) {
                 repositoryUrl += `?apiUrl=${apiUrl}`;
@@ -399,6 +399,7 @@ class PipelineLoader extends React.Component {
         // hide the dialog until it reports as ready (i.e. credential fetch is done)
         const dialogClassName = `dialog-token ${loading ? 'loading' : ''}`;
 
+        // TODO: variable title
         this.setState({
             dialog: (
                 <Dialog
