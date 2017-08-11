@@ -1,17 +1,17 @@
 // @flow
 
-import { Fetch, getRestUrl, sseService, loadingIndicator, capabilityAugmenter } from '@jenkins-cd/blueocean-core-js';
+import { Fetch, getRestUrl, sseService, loadingIndicator } from '@jenkins-cd/blueocean-core-js';
 
 export class SaveApi {
 
-    indexRepo(organization, teamName, repoName, apiUrl, credentialId) {
+    indexRepo(organization, teamName, repoName, scmId, apiUrl) {
         const createUrl = `${getRestUrl({organization})}/pipelines/`;
 
         const requestBody = {
             name: teamName,
             $class: 'io.jenkins.blueocean.blueocean_github_pipeline.GithubPipelineCreateRequest',
             scmConfig: {
-                credentialId,
+                id: scmId,
                 uri: apiUrl,
                 config: {
                     orgName: teamName,

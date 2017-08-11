@@ -163,7 +163,7 @@ class PipelineLoader extends React.Component {
             return t;
         }
     }
-    
+
     checkForModification() {
         if (!this.lastPipeline) {
             this.lastPipeline = JSON.stringify(convertInternalModelToJson(pipelineStore.pipeline));
@@ -202,33 +202,19 @@ class PipelineLoader extends React.Component {
     }
 
     loadPipeline() {
-        const { organization, pipeline, branch } = this.props.params;
+        const { pipeline } = this.props.params;
         this.opener = locationService.previous;
 
         if (!pipeline) {
             this.makeEmptyPipeline();
             return; // no pipeline to load
         }
-        
-        if (!branch) {
-            const split = pipeline.split('/');
-            const team = split[0];
-            const repo = split.length > 1 ? split[1] : team;
-            const scmId = this.state.scmSource.id;
-            Fetch.fetchJSON(`${getRestUrl({organization})}scm/${scmId}/`)
-            .then( ({ credentialId }) =>
-                Fetch.fetchJSON(`${getRestUrl({organization})}scm/${scmId}/organizations/${team}/repositories/${repo}/?credentialId=${credentialId}`)
-            )
-            .then( ({ defaultBranch }) => {
-                this.defaultBranch = defaultBranch || 'master';
-            })
-            .catch(err => this.defaultBranch = 'master');
-        } else {
-            this.defaultBranch = branch;
-        }
 
         this.loadPipelineMetadata()
-            .then(() => this.checkForToken());
+            .then(() => {
+                this.loadBranchMetadata();
+                this.loadContent();
+            });
     }
 
     refreshPipeline(onComplete) {
@@ -250,6 +236,29 @@ class PipelineLoader extends React.Component {
                         this.showErrorDialog(err);
                     });
             });
+    }
+
+    loadBranchMetadata() {
+        const { organization, pipeline, branch } = this.props.params;
+
+        if (!branch) {
+            const split = pipeline.split('/');
+            const team = split[0];
+            const repo = split.length > 1 ? split[1] : team;
+            const { id: scmId, apiUrl } = this.state.scmSource;
+            let repositoryUrl = `${getRestUrl({organization})}scm/${scmId}/organizations/${team}/repositories/${repo}/`;
+            if (apiUrl) {
+                repositoryUrl += `?apiUrl=${apiUrl}`;
+            }
+            return Fetch.fetchJSON(repositoryUrl)
+                .then( ({ defaultBranch }) => {
+                    this.defaultBranch = defaultBranch || 'master';
+                })
+                .catch(err => this.defaultBranch = 'master');
+        }
+
+        this.defaultBranch = branch;
+        return new Promise(resolve => resolve(null));
     }
 
     _savePipelineMetadata(pipeline) {
@@ -476,10 +485,9 @@ class PipelineLoader extends React.Component {
                         // if a different branch, call indexing so this one gets picked up
                         // only time we have 'github' is when we are using an org folder
                         // in which case use the existing saveApi
-                        const scmId = this.state.scmSource.id;
+                        const { id: scmId, apiUrl } = this.state.scmSource;
                         if (scmId.startsWith('github')) {
-                            const {credential, scmSource} = this.state;
-                            saveApi.index(organization, team, repo, scmSource.apiUrl, credential.credentialId,
+                            saveApi.index(organization, team, repo, scmId, apiUrl,
                                 () => this.goToActivity(),
                                 err => errorHandler(err),
                             );
