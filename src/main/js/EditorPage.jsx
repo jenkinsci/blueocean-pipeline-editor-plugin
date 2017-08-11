@@ -184,7 +184,7 @@ class PipelineLoader extends React.Component {
         this.forceUpdate();
     }
 
-    showLoadingError() {
+    showLoadingError(err) {
         this.showErrorDialog(
             <div className="errors">
                 <div>
