@@ -291,7 +291,7 @@ class PipelineLoader extends React.Component {
                 if (err.type === LoadError.JENKINSFILE_NOT_FOUND) {
                     this.makeEmptyPipeline();
                 } else if (err.type === LoadError.TOKEN_NOT_FOUND || err.type === LoadError.TOKEN_REVOKED) {
-                    this.createTokenDialog();
+                    this.createTokenDialog({ loading: true });
                 } else {
                     this.showLoadingError(err);
                 }
@@ -385,9 +385,10 @@ class PipelineLoader extends React.Component {
         )});
     }
 
-    createTokenDialog({loading = false } = {}) {
+    createTokenDialog({ loading = false } = {}) {
         const pipeline = pipelineService.getPipeline(this.href);
         const { scmSource } = pipeline;
+        const title = this.getScmTitle(scmSource.id);
         const githubConfig = {
             scmId: scmSource.id,
             apiUrl: scmSource.apiUrl,
@@ -395,12 +396,11 @@ class PipelineLoader extends React.Component {
         // hide the dialog until it reports as ready (i.e. credential fetch is done)
         const dialogClassName = `dialog-token ${loading ? 'loading' : ''}`;
 
-        // TODO: variable title
         this.setState({
             dialog: (
                 <Dialog
+                    title={title}
                     className={dialogClassName}
-                    title="Connect to GitHub"
                     buttons={[]}
                     onDismiss={() => this.cancel()}
                 >
@@ -408,12 +408,28 @@ class PipelineLoader extends React.Component {
                         extensionPoint="jenkins.credentials.selection"
                         onStatus={status => this.onCredentialStatus(status)}
                         onComplete={cred => this.onCredentialSelected(cred)}
-                        type="github"
+                        type={scmSource.id}
                         githubConfig={githubConfig}
                     />
                 </Dialog>
             )
         });
+    }
+
+    getScmTitle(scmId) {
+        let scmLabel = '';
+
+        if (scmId === 'github') {
+            scmLabel = 'GitHub';
+        } else if (scmId === 'github-enterprise') {
+            scmLabel = 'GitHub Enterprise';
+        }
+
+        if (scmLabel) {
+            return `Connect to ${scmLabel}`;
+        }
+
+        return 'Unknown SCM Provider';
     }
 
     onCredentialStatus(status) {
