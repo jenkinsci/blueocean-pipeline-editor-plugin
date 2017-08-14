@@ -385,10 +385,6 @@ class PipelineLoader extends React.Component {
         )});
     }
 
-    checkForToken() {
-        this.createTokenDialog({loading: true});
-    }
-
     createTokenDialog({loading = false } = {}) {
         const pipeline = pipelineService.getPipeline(this.href);
         const { scmSource } = pipeline;
