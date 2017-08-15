@@ -424,7 +424,7 @@ class PipelineLoader extends React.Component {
         } else if (scmId === 'github-enterprise') {
             scmLabel = 'GitHub Enterprise';
         } else if (scmId === 'bitbucket-cloud') {
-            scmLabel = 'Bitbucket';
+            scmLabel = 'Bitbucket Cloud';
         } else if (scmId === 'bitbucket-server') {
             scmLabel = 'Bitbucket Server'
         } else if (scmId === 'git') {
