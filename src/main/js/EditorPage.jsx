@@ -291,7 +291,7 @@ class PipelineLoader extends React.Component {
                 if (err.type === LoadError.JENKINSFILE_NOT_FOUND) {
                     this.makeEmptyPipeline();
                 } else if (err.type === LoadError.TOKEN_NOT_FOUND || err.type === LoadError.TOKEN_REVOKED) {
-                    this.createTokenDialog({ loading: true });
+                    this.showCredentialDialog({ loading: true });
                 } else {
                     this.showLoadingError(err);
                 }
@@ -385,7 +385,7 @@ class PipelineLoader extends React.Component {
         )});
     }
 
-    createTokenDialog({ loading = false } = {}) {
+    showCredentialDialog({ loading = false } = {}) {
         const pipeline = pipelineService.getPipeline(this.href);
         const { scmSource } = pipeline;
         const title = this.getScmTitle(scmSource.id);
@@ -440,7 +440,7 @@ class PipelineLoader extends React.Component {
 
     onCredentialStatus(status) {
         if (status === 'promptReady') {
-            this.createTokenDialog();
+            this.showCredentialDialog();
         }
     }
 
