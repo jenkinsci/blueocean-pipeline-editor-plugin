@@ -18,7 +18,8 @@
   "license": "MIT",
   "devDependencies": {
     "@jenkins-cd/eslint-config-jenkins": "0.0.2",
-    "@jenkins-cd/js-builder": "^0.0.52",
+    "@jenkins-cd/js-builder": "0.0.59",
+    "@jenkins-cd/js-extensions": "0.0.36",
     "@jenkins-cd/js-test": "1.2.3",
     "@kadira/storybook": "2.20.1",
     "babel": "6.5.2",
@@ -42,7 +43,6 @@
   "dependencies": {
     "@jenkins-cd/blueocean-core-js": "0.0.150",
     "@jenkins-cd/design-language": "0.0.145",
-    "@jenkins-cd/js-extensions": "0.0.33",
     "@jenkins-cd/js-modules": "0.0.8",
     "lodash.debounce": "4.0.8",
     "mobx": "2.6.0",
