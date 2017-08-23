@@ -1,30 +1,14 @@
-# Blue Ocean Pipeline Editor
+# IMPORTANT: THIS CODE HAS BEEN MIGRATED TO THE BLUE OCEAN PROJECT
 
-This repository houses the [Jenkins](https://jenkins.io/) plugin for creating and editing Pipeline jobs within the [Blue Ocean](https://jenkins.io/projects/blueocean/) user interface.
+The editor has been deeply coupled with blue ocean for some time. 
+To ease development with blue ocean, it has been moved (with history preserved) into
 
-![Pipeline Editor Screenshot](doc/editor-ss.png)
+https://github.com/jenkinsci/blueocean-plugin/tree/master/blueocean-pipeline-editor
 
-:exclamation: **Important!** This software is a work-in-progress and is not complete.
-
-## Running Locally
-
-To start a new jenkins and run this pluging for development purposes:
-
-```
-# Start a local Jenkins
-mvn hpi:run
-```
-
-And in another term,
-```
-# Watch and build the JS
-npm run bundle:watch
-```
+Please submit changes to the main blueocean repository there. 
 
 
-## Running in another development Jenkins Instance
 
-```
-# Link this as a plugin into your Blue Ocean Jenkins' hpi:run server
-mvn hpi:hpl -DjenkinsHome=<path-to-blueocean-home/blueocean/work>
-```
+
+
+
