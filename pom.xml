@@ -26,7 +26,7 @@
         <node.version>6.2.1</node.version>
         <npm.version>3.9.3</npm.version>
         <blueocean.version>1.2.0-beta-6</blueocean.version>
-        <declarative.version>1.0</declarative.version>
+        <declarative.version>1.2-beta-4-20170821.165548-7</declarative.version> <!-- TODO:Update to 1.2 when released -->
     </properties>
 
     <url>https://wiki.jenkins-ci.org/display/JENKINS/BlueOcean+Pipeline+Editor+Plugin</url>
